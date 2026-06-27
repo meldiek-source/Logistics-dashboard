@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Noon Minutes · Egypt — Logistics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0A1929;--card:#112240;--bdr:#1E3A5F;--text:#E8F4FD;--muted:#7B9EC0;--teal:#00B4A6;--gold:#F5A623;--ok:#22D3A0;--warn:#F5A623;--danger:#FF6B6B;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 18px 60px}
+h1{font-size:20px;font-weight:700}
+.ey{font-size:10px;color:var(--teal);letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:10px;flex-wrap:wrap}
+.hr{text-align:right;font-size:11px;color:var(--muted)}.hr strong{color:var(--text)}
+.bg-row{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;margin-top:4px}
+.bg{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
+.bg.bq{background:#00B4A622;color:var(--teal);border:1px solid #00B4A644}
+.bg.gd{background:#7C3AED22;color:#a78bfa;border:1px solid #7C3AED44}
+.tabs{display:flex;gap:1px;border-bottom:1px solid var(--bdr);margin-bottom:20px}
+.tab{background:none;border:none;cursor:pointer;padding:9px 15px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;white-space:nowrap;transition:.15s}
+.tab.on{color:var(--teal);font-weight:600;border-bottom-color:var(--teal)}
+.pane{display:none}.pane.on{display:block}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px}
+.kpi{flex:1;min-width:140px}
+.lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px}
+.val{font-size:24px;font-weight:700;line-height:1;margin-bottom:2px}
+.sub{font-size:11px;color:var(--muted)}
+.sec{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center}
+.stag{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600}
+.stag.bq{background:#00B4A622;color:var(--teal);border:1px solid #00B4A633}
+.stag.gd{background:#7C3AED22;color:#a78bfa;border:1px solid #7C3AED33}
+.cc{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:5px}
+.ch h3{font-size:13px;font-weight:600;margin:0}
+select{background:#1E3A5F;color:var(--text);border:1px solid #2D5080;border-radius:7px;padding:4px 8px;font-size:11px;font-family:inherit;outline:none;cursor:pointer}
+select:hover{border-color:var(--teal)}
+.frow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end}
+.fg label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px 10px;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr)}
+td{padding:6px 10px;border-bottom:1px solid #1E3A5F22}
+tr:nth-child(even) td{background:#ffffff03}
+th.r,td.r{text-align:right}
+.tc{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;margin-bottom:12px;overflow-x:auto}
+.tc h3{font-size:13px;font-weight:600;margin-bottom:9px}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:9px;margin-bottom:14px}
+.sc{background:var(--card);border:1px solid var(--bdr);border-radius:9px;padding:11px 13px}
+.sn{font-size:11px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv{font-size:21px;font-weight:700;line-height:1.1;margin-bottom:4px}
+.sm{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.sl{font-size:10px;color:var(--muted)}.sv2{font-size:12px;font-weight:600}
+.dock{position:fixed;bottom:0;left:0;right:0;background:#0D2137;border-top:1px solid var(--bdr);padding:8px 16px;z-index:100;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:11px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div><div class="ey">Noon Minutes · Egypt</div><h1>Logistics Operations Dashboard</h1></div>
+  <div class="hr">Data as of <strong>Jun 24, 2026</strong>
+    <div class="bg-row">
+      <span class="bg bq">● Orders/Ops: BigQuery — noonbinimlog</span>
+      <span class="bg gd">● CPO/AOV: CPO_Egypt Sheet</span>
+    </div>
+  </div>
+</div>
+<div class="tabs">
+  <button class="tab on" onclick="go(0)">🏛 Leadership</button>
+  <button class="tab"    onclick="go(1)">🏪 Stores</button>
+  <button class="tab"    onclick="go(2)">⏱ Delays & Quality</button>
+  <button class="tab"    onclick="go(3)">🚚 Vendors</button>
+  <button class="tab"    onclick="go(4)">📊 Utilization</button>
+</div>
+
+<!-- ══ TAB 0: LEADERSHIP ══ -->
+<div class="pane on" id="p0">
+
+  <!-- ── Global filters for Order Volume KPIs ── -->
+  <div class="frow" style="margin-bottom:6px">
+    <div class="fg"><label>Orders Month</label>
+      <select id="kpi-mo" onchange="rKpiOrders()">
+        <option value="ALL">All Months (YTD)</option>
+        <option value="2026-04">April 2026</option>
+        <option value="2026-05">May 2026</option>
+        <option value="2026-06" selected>June 2026</option>
+      </select>
+    </div>
+    <div class="fg"><label>Orders Store</label>
+      <select id="kpi-st" onchange="rKpiOrders()"><option value="ALL">All Stores</option></select>
+    </div>
+    <div class="fg"><label>Day</label>
+      <select id="kpi-day" onchange="rKpiOrders()">
+        <option value="ALL">All Days</option><optgroup label="── June 2026 ──"><option value="2026-06-24">Jun 24</option><option value="2026-06-23">Jun 23</option><option value="2026-06-22">Jun 22</option><option value="2026-06-21">Jun 21</option><option value="2026-06-20">Jun 20</option><option value="2026-06-19">Jun 19</option><option value="2026-06-18">Jun 18</option><option value="2026-06-17">Jun 17</option><option value="2026-06-16">Jun 16</option><option value="2026-06-15">Jun 15</option><option value="2026-06-14">Jun 14</option><option value="2026-06-13">Jun 13</option><option value="2026-06-12">Jun 12</option><option value="2026-06-11">Jun 11</option><option value="2026-06-10">Jun 10</option><option value="2026-06-09">Jun 09</option><option value="2026-06-08">Jun 08</option><option value="2026-06-07">Jun 07</option><option value="2026-06-06">Jun 06</option><option value="2026-06-05">Jun 05</option><option value="2026-06-04">Jun 04</option><option value="2026-06-03">Jun 03</option><option value="2026-06-02">Jun 02</option><option value="2026-06-01">Jun 01</option><optgroup label="── May 2026 ──"><option value="2026-05-31">May 31</option><option value="2026-05-30">May 30</option><option value="2026-05-29">May 29</option><option value="2026-05-28">May 28</option><option value="2026-05-27">May 27</option><option value="2026-05-26">May 26</option><option value="2026-05-25">May 25</option><option value="2026-05-24">May 24</option><option value="2026-05-23">May 23</option><option value="2026-05-22">May 22</option><option value="2026-05-21">May 21</option><option value="2026-05-20">May 20</option><option value="2026-05-19">May 19</option><option value="2026-05-18">May 18</option><option value="2026-05-17">May 17</option><option value="2026-05-16">May 16</option><option value="2026-05-15">May 15</option><option value="2026-05-14">May 14</option><option value="2026-05-13">May 13</option><option value="2026-05-12">May 12</option><option value="2026-05-11">May 11</option><option value="2026-05-10">May 10</option><option value="2026-05-09">May 09</option><option value="2026-05-08">May 08</option><option value="2026-05-07">May 07</option><option value="2026-05-06">May 06</option><option value="2026-05-05">May 05</option><option value="2026-05-04">May 04</option><option value="2026-05-03">May 03</option><option value="2026-05-02">May 02</option><option value="2026-05-01">May 01</option><optgroup label="── April 2026 ──"><option value="2026-04-30">Apr 30</option><option value="2026-04-29">Apr 29</option><option value="2026-04-28">Apr 28</option><option value="2026-04-27">Apr 27</option><option value="2026-04-26">Apr 26</option><option value="2026-04-25">Apr 25</option><option value="2026-04-24">Apr 24</option><option value="2026-04-23">Apr 23</option><option value="2026-04-22">Apr 22</option><option value="2026-04-21">Apr 21</option><option value="2026-04-20">Apr 20</option><option value="2026-04-19">Apr 19</option><option value="2026-04-18">Apr 18</option><option value="2026-04-17">Apr 17</option><option value="2026-04-16">Apr 16</option><option value="2026-04-15">Apr 15</option><option value="2026-04-14">Apr 14</option><option value="2026-04-13">Apr 13</option><option value="2026-04-12">Apr 12</option><option value="2026-04-11">Apr 11</option><option value="2026-04-10">Apr 10</option><option value="2026-04-09">Apr 09</option><option value="2026-04-07">Apr 07</option><option value="2026-04-06">Apr 06</option><option value="2026-04-05">Apr 05</option><option value="2026-04-04">Apr 04</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="sec">Order Volume <span class="stag bq">BigQuery · noonbinimlog</span></div>
+  <div class="row" id="kv0"></div>
+
+  <!-- ── CPO / AOV filter row ── -->
+  <div class="frow" style="margin-top:18px;margin-bottom:6px">
+    <div class="fg"><label>CPO/AOV Month</label>
+      <select id="cpo-kpi-mo" onchange="rKpiCpo();rAov()">
+        <option value="ALL">May + Jun (Combined)</option>
+        <option value="2026-05">May 2026</option>
+        <option value="2026-06" selected>June 2026</option>
+      </select>
+    </div>
+    <div class="fg"><label>CPO/AOV Store</label>
+      <select id="cpo-kpi-st" onchange="rKpiCpo()">
+        <option value="ALL">All Stores</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="sec">Cost Per Order (CPO) <span class="stag gd">CPO_Egypt Sheet</span></div>
+  <div class="row" id="kvcpo"></div>
+
+  <div class="cc">
+    <div class="ch">
+      <h3>CPO Trend <span style="font-size:10px;color:#a78bfa">● Sheet</span></h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="fg"><label>View</label>
+          <select id="cpogran" onchange="rCpoChart()">
+            <option value="daily" selected>Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+        <div class="fg"><label>Month</label>
+          <select id="cpomon" onchange="rCpoChart()">
+            <option value="ALL">May + Jun</option>
+            <option value="2026-05">May 2026</option>
+            <option value="2026-06" selected>Jun 2026</option>
+          </select>
+        </div>
+        <div class="fg"><label>Store</label>
+          <select id="cpo-chart-st" onchange="rCpoChart()"><option value="ALL">All Stores</option></select>
+        </div>
+      </div>
+    </div>
+    <canvas id="cpoC" height="50"></canvas>
+  </div>
+
+  <div class="tc">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+      <h3 id="cpo-tbl-h">CPO by Store <span style="font-size:10px;color:#a78bfa">● CPO_Egypt Sheet</span></h3>
+      <div style="display:flex;gap:6px">
+        <div class="fg"><label>Month</label>
+          <select id="cpo-tbl-mo" onchange="rCpoTable()">
+            <option value="2026-06" selected>June 2026</option>
+            <option value="2026-05">May 2026</option>
+          </select>
+        </div>
+        <div class="fg"><label>Store</label>
+          <select id="cpo-tbl-st" onchange="rCpoTable()"><option value="ALL">All Stores</option></select>
+        </div>
+      </div>
+    </div>
+    <table><thead><tr>
+      <th>Store</th><th class="r">BQ Orders</th>
+      <th class="r">CPO (EGP)</th><th class="r">vs MTD Avg</th>
+    </tr></thead><tbody id="cpotb"></tbody></table>
+  </div>
+
+  <div class="sec">Average Order Value (AOV) <span class="stag gd">CPO_Egypt Sheet</span></div>
+  <div class="row" id="kvaov"></div>
+
+  <div class="sec">Delivered Orders Trend <span class="stag bq">BigQuery</span></div>
+  <div class="cc">
+    <div class="ch">
+      <h3>Delivered Orders Trend</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="fg"><label>View</label>
+          <select id="trdgran" onchange="rTrend()">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly" selected>Monthly</option>
+          </select>
+        </div>
+        <div class="fg"><label>Store</label>
+          <select id="trdst" onchange="rTrend()"><option value="ALL">All Stores</option></select>
+        </div>
+    <div class="fg"><label>Day</label>
+      <select id="trd-day" onchange="rTrend()">
+        <option value="ALL">All Days</option><optgroup label="── June 2026 ──"><option value="2026-06-24">Jun 24</option><option value="2026-06-23">Jun 23</option><option value="2026-06-22">Jun 22</option><option value="2026-06-21">Jun 21</option><option value="2026-06-20">Jun 20</option><option value="2026-06-19">Jun 19</option><option value="2026-06-18">Jun 18</option><option value="2026-06-17">Jun 17</option><option value="2026-06-16">Jun 16</option><option value="2026-06-15">Jun 15</option><option value="2026-06-14">Jun 14</option><option value="2026-06-13">Jun 13</option><option value="2026-06-12">Jun 12</option><option value="2026-06-11">Jun 11</option><option value="2026-06-10">Jun 10</option><option value="2026-06-09">Jun 09</option><option value="2026-06-08">Jun 08</option><option value="2026-06-07">Jun 07</option><option value="2026-06-06">Jun 06</option><option value="2026-06-05">Jun 05</option><option value="2026-06-04">Jun 04</option><option value="2026-06-03">Jun 03</option><option value="2026-06-02">Jun 02</option><option value="2026-06-01">Jun 01</option><optgroup label="── May 2026 ──"><option value="2026-05-31">May 31</option><option value="2026-05-30">May 30</option><option value="2026-05-29">May 29</option><option value="2026-05-28">May 28</option><option value="2026-05-27">May 27</option><option value="2026-05-26">May 26</option><option value="2026-05-25">May 25</option><option value="2026-05-24">May 24</option><option value="2026-05-23">May 23</option><option value="2026-05-22">May 22</option><option value="2026-05-21">May 21</option><option value="2026-05-20">May 20</option><option value="2026-05-19">May 19</option><option value="2026-05-18">May 18</option><option value="2026-05-17">May 17</option><option value="2026-05-16">May 16</option><option value="2026-05-15">May 15</option><option value="2026-05-14">May 14</option><option value="2026-05-13">May 13</option><option value="2026-05-12">May 12</option><option value="2026-05-11">May 11</option><option value="2026-05-10">May 10</option><option value="2026-05-09">May 09</option><option value="2026-05-08">May 08</option><option value="2026-05-07">May 07</option><option value="2026-05-06">May 06</option><option value="2026-05-05">May 05</option><option value="2026-05-04">May 04</option><option value="2026-05-03">May 03</option><option value="2026-05-02">May 02</option><option value="2026-05-01">May 01</option><optgroup label="── April 2026 ──"><option value="2026-04-30">Apr 30</option><option value="2026-04-29">Apr 29</option><option value="2026-04-28">Apr 28</option><option value="2026-04-27">Apr 27</option><option value="2026-04-26">Apr 26</option><option value="2026-04-25">Apr 25</option><option value="2026-04-24">Apr 24</option><option value="2026-04-23">Apr 23</option><option value="2026-04-22">Apr 22</option><option value="2026-04-21">Apr 21</option><option value="2026-04-20">Apr 20</option><option value="2026-04-19">Apr 19</option><option value="2026-04-18">Apr 18</option><option value="2026-04-17">Apr 17</option><option value="2026-04-16">Apr 16</option><option value="2026-04-15">Apr 15</option><option value="2026-04-14">Apr 14</option><option value="2026-04-13">Apr 13</option><option value="2026-04-12">Apr 12</option><option value="2026-04-11">Apr 11</option><option value="2026-04-10">Apr 10</option><option value="2026-04-09">Apr 09</option><option value="2026-04-07">Apr 07</option><option value="2026-04-06">Apr 06</option><option value="2026-04-05">Apr 05</option><option value="2026-04-04">Apr 04</option>
+      </select>
+    </div>
+      </div>
+    </div>
+    <canvas id="trdC" height="47"></canvas>
+  </div>
+</div>
+
+<!-- ══ TAB 1: STORES ══ -->
+<div class="pane" id="p1">
+  <div class="frow">
+    <div class="fg"><label>Month</label>
+      <select id="s1m" onchange="rStores()">
+        <option value="ALL">All Months</option>
+        <option value="2026-04">April 2026</option>
+        <option value="2026-05">May 2026</option>
+        <option value="2026-06" selected>June 2026</option>
+      </select>
+    </div>
+    <div class="fg"><label>Store</label>
+      <select id="s1s" onchange="rStores()"><option value="ALL">All Stores</option></select>
+    </div>
+    <div class="fg"><label>Day</label>
+      <select id="s1-day" onchange="rStores()">
+        <option value="ALL">All Days</option><optgroup label="── June 2026 ──"><option value="2026-06-24">Jun 24</option><option value="2026-06-23">Jun 23</option><option value="2026-06-22">Jun 22</option><option value="2026-06-21">Jun 21</option><option value="2026-06-20">Jun 20</option><option value="2026-06-19">Jun 19</option><option value="2026-06-18">Jun 18</option><option value="2026-06-17">Jun 17</option><option value="2026-06-16">Jun 16</option><option value="2026-06-15">Jun 15</option><option value="2026-06-14">Jun 14</option><option value="2026-06-13">Jun 13</option><option value="2026-06-12">Jun 12</option><option value="2026-06-11">Jun 11</option><option value="2026-06-10">Jun 10</option><option value="2026-06-09">Jun 09</option><option value="2026-06-08">Jun 08</option><option value="2026-06-07">Jun 07</option><option value="2026-06-06">Jun 06</option><option value="2026-06-05">Jun 05</option><option value="2026-06-04">Jun 04</option><option value="2026-06-03">Jun 03</option><option value="2026-06-02">Jun 02</option><option value="2026-06-01">Jun 01</option><optgroup label="── May 2026 ──"><option value="2026-05-31">May 31</option><option value="2026-05-30">May 30</option><option value="2026-05-29">May 29</option><option value="2026-05-28">May 28</option><option value="2026-05-27">May 27</option><option value="2026-05-26">May 26</option><option value="2026-05-25">May 25</option><option value="2026-05-24">May 24</option><option value="2026-05-23">May 23</option><option value="2026-05-22">May 22</option><option value="2026-05-21">May 21</option><option value="2026-05-20">May 20</option><option value="2026-05-19">May 19</option><option value="2026-05-18">May 18</option><option value="2026-05-17">May 17</option><option value="2026-05-16">May 16</option><option value="2026-05-15">May 15</option><option value="2026-05-14">May 14</option><option value="2026-05-13">May 13</option><option value="2026-05-12">May 12</option><option value="2026-05-11">May 11</option><option value="2026-05-10">May 10</option><option value="2026-05-09">May 09</option><option value="2026-05-08">May 08</option><option value="2026-05-07">May 07</option><option value="2026-05-06">May 06</option><option value="2026-05-05">May 05</option><option value="2026-05-04">May 04</option><option value="2026-05-03">May 03</option><option value="2026-05-02">May 02</option><option value="2026-05-01">May 01</option><optgroup label="── April 2026 ──"><option value="2026-04-30">Apr 30</option><option value="2026-04-29">Apr 29</option><option value="2026-04-28">Apr 28</option><option value="2026-04-27">Apr 27</option><option value="2026-04-26">Apr 26</option><option value="2026-04-25">Apr 25</option><option value="2026-04-24">Apr 24</option><option value="2026-04-23">Apr 23</option><option value="2026-04-22">Apr 22</option><option value="2026-04-21">Apr 21</option><option value="2026-04-20">Apr 20</option><option value="2026-04-19">Apr 19</option><option value="2026-04-18">Apr 18</option><option value="2026-04-17">Apr 17</option><option value="2026-04-16">Apr 16</option><option value="2026-04-15">Apr 15</option><option value="2026-04-14">Apr 14</option><option value="2026-04-13">Apr 13</option><option value="2026-04-12">Apr 12</option><option value="2026-04-11">Apr 11</option><option value="2026-04-10">Apr 10</option><option value="2026-04-09">Apr 09</option><option value="2026-04-07">Apr 07</option><option value="2026-04-06">Apr 06</option><option value="2026-04-05">Apr 05</option><option value="2026-04-04">Apr 04</option>
+      </select>
+    </div>
+  </div>
+  <div class="sec">Store Scorecards <span class="stag bq">BigQuery</span></div>
+  <div class="sg" id="sgrid"></div>
+  <div class="cc">
+    <div class="ch">
+      <h3 id="sbh">Orders by Store</h3>
+      <div class="fg"><label>Month</label>
+        <select id="sbm" onchange="rSBar()">
+          <option value="ALL">All Months</option>
+          <option value="2026-04">April 2026</option>
+          <option value="2026-05">May 2026</option>
+          <option value="2026-06" selected>June 2026</option>
+        </select>
+      </div>
+    <div class="fg"><label>Day</label>
+      <select id="sb-day" onchange="rSBar()">
+        <option value="ALL">All Days</option><optgroup label="── June 2026 ──"><option value="2026-06-24">Jun 24</option><option value="2026-06-23">Jun 23</option><option value="2026-06-22">Jun 22</option><option value="2026-06-21">Jun 21</option><option value="2026-06-20">Jun 20</option><option value="2026-06-19">Jun 19</option><option value="2026-06-18">Jun 18</option><option value="2026-06-17">Jun 17</option><option value="2026-06-16">Jun 16</option><option value="2026-06-15">Jun 15</option><option value="2026-06-14">Jun 14</option><option value="2026-06-13">Jun 13</option><option value="2026-06-12">Jun 12</option><option value="2026-06-11">Jun 11</option><option value="2026-06-10">Jun 10</option><option value="2026-06-09">Jun 09</option><option value="2026-06-08">Jun 08</option><option value="2026-06-07">Jun 07</option><option value="2026-06-06">Jun 06</option><option value="2026-06-05">Jun 05</option><option value="2026-06-04">Jun 04</option><option value="2026-06-03">Jun 03</option><option value="2026-06-02">Jun 02</option><option value="2026-06-01">Jun 01</option><optgroup label="── May 2026 ──"><option value="2026-05-31">May 31</option><option value="2026-05-30">May 30</option><option value="2026-05-29">May 29</option><option value="2026-05-28">May 28</option><option value="2026-05-27">May 27</option><option value="2026-05-26">May 26</option><option value="2026-05-25">May 25</option><option value="2026-05-24">May 24</option><option value="2026-05-23">May 23</option><option value="2026-05-22">May 22</option><option value="2026-05-21">May 21</option><option value="2026-05-20">May 20</option><option value="2026-05-19">May 19</option><option value="2026-05-18">May 18</option><option value="2026-05-17">May 17</option><option value="2026-05-16">May 16</option><option value="2026-05-15">May 15</option><option value="2026-05-14">May 14</option><option value="2026-05-13">May 13</option><option value="2026-05-12">May 12</option><option value="2026-05-11">May 11</option><option value="2026-05-10">May 10</option><option value="2026-05-09">May 09</option><option value="2026-05-08">May 08</option><option value="2026-05-07">May 07</option><option value="2026-05-06">May 06</option><option value="2026-05-05">May 05</option><option value="2026-05-04">May 04</option><option value="2026-05-03">May 03</option><option value="2026-05-02">May 02</option><option value="2026-05-01">May 01</option><optgroup label="── April 2026 ──"><option value="2026-04-30">Apr 30</option><option value="2026-04-29">Apr 29</option><option value="2026-04-28">Apr 28</option><option value="2026-04-27">Apr 27</option><option value="2026-04-26">Apr 26</option><option value="2026-04-25">Apr 25</option><option value="2026-04-24">Apr 24</option><option value="2026-04-23">Apr 23</option><option value="2026-04-22">Apr 22</option><option value="2026-04-21">Apr 21</option><option value="2026-04-20">Apr 20</option><option value="2026-04-19">Apr 19</option><option value="2026-04-18">Apr 18</option><option value="2026-04-17">Apr 17</option><option value="2026-04-16">Apr 16</option><option value="2026-04-15">Apr 15</option><option value="2026-04-14">Apr 14</option><option value="2026-04-13">Apr 13</option><option value="2026-04-12">Apr 12</option><option value="2026-04-11">Apr 11</option><option value="2026-04-10">Apr 10</option><option value="2026-04-09">Apr 09</option><option value="2026-04-07">Apr 07</option><option value="2026-04-06">Apr 06</option><option value="2026-04-05">Apr 05</option><option value="2026-04-04">Apr 04</option>
+      </select>
+    </div>
+    </div>
+    <canvas id="sbC" height="95"></canvas>
+  </div>
+  <div class="cc">
+    <div class="ch">
+      <h3 id="sth">Daily Trend</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="fg"><label>Metric</label>
+          <select id="stmet" onchange="rSTrend()">
+            <option value="del">Delivered</option>
+            <option value="dly">Delayed &gt;15min</option>
+          </select>
+        </div>
+        <div class="fg"><label>Month</label>
+          <select id="stm" onchange="rSTrend()">
+            <option value="ALL">All Months</option>
+            <option value="2026-04">April 2026</option>
+            <option value="2026-05">May 2026</option>
+            <option value="2026-06" selected>June 2026</option>
+          </select>
+        </div>
+        <div class="fg"><label>Store</label>
+          <select id="sts" onchange="rSTrend()"><option value="ALL">All Stores</option></select>
+        </div>
+    <div class="fg"><label>Day</label>
+      <select id="st-day" onchange="rSTrend()">
+        <option value="ALL">All Days</option><optgroup label="── June 2026 ──"><option value="2026-06-24">Jun 24</option><option value="2026-06-23">Jun 23</option><option value="2026-06-22">Jun 22</option><option value="2026-06-21">Jun 21</option><option value="2026-06-20">Jun 20</option><option value="2026-06-19">Jun 19</option><option value="2026-06-18">Jun 18</option><option value="2026-06-17">Jun 17</option><option value="2026-06-16">Jun 16</option><option value="2026-06-15">Jun 15</option><option value="2026-06-14">Jun 14</option><option value="2026-06-13">Jun 13</option><option value="2026-06-12">Jun 12</option><option value="2026-06-11">Jun 11</option><option value="2026-06-10">Jun 10</option><option value="2026-06-09">Jun 09</option><option value="2026-06-08">Jun 08</option><option value="2026-06-07">Jun 07</option><option value="2026-06-06">Jun 06</option><option value="2026-06-05">Jun 05</option><option value="2026-06-04">Jun 04</option><option value="2026-06-03">Jun 03</option><option value="2026-06-02">Jun 02</option><option value="2026-06-01">Jun 01</option><optgroup label="── May 2026 ──"><option value="2026-05-31">May 31</option><option value="2026-05-30">May 30</option><option value="2026-05-29">May 29</option><option value="2026-05-28">May 28</option><option value="2026-05-27">May 27</option><option value="2026-05-26">May 26</option><option value="2026-05-25">May 25</option><option value="2026-05-24">May 24</option><option value="2026-05-23">May 23</option><option value="2026-05-22">May 22</option><option value="2026-05-21">May 21</option><option value="2026-05-20">May 20</option><option value="2026-05-19">May 19</option><option value="2026-05-18">May 18</option><option value="2026-05-17">May 17</option><option value="2026-05-16">May 16</option><option value="2026-05-15">May 15</option><option value="2026-05-14">May 14</option><option value="2026-05-13">May 13</option><option value="2026-05-12">May 12</option><option value="2026-05-11">May 11</option><option value="2026-05-10">May 10</option><option value="2026-05-09">May 09</option><option value="2026-05-08">May 08</option><option value="2026-05-07">May 07</option><option value="2026-05-06">May 06</option><option value="2026-05-05">May 05</option><option value="2026-05-04">May 04</option><option value="2026-05-03">May 03</option><option value="2026-05-02">May 02</option><option value="2026-05-01">May 01</option><optgroup label="── April 2026 ──"><option value="2026-04-30">Apr 30</option><option value="2026-04-29">Apr 29</option><option value="2026-04-28">Apr 28</option><option value="2026-04-27">Apr 27</option><option value="2026-04-26">Apr 26</option><option value="2026-04-25">Apr 25</option><option value="2026-04-24">Apr 24</option><option value="2026-04-23">Apr 23</option><option value="2026-04-22">Apr 22</option><option value="2026-04-21">Apr 21</option><option value="2026-04-20">Apr 20</option><option value="2026-04-19">Apr 19</option><option value="2026-04-18">Apr 18</option><option value="2026-04-17">Apr 17</option><option value="2026-04-16">Apr 16</option><option value="2026-04-15">Apr 15</option><option value="2026-04-14">Apr 14</option><option value="2026-04-13">Apr 13</option><option value="2026-04-12">Apr 12</option><option value="2026-04-11">Apr 11</option><option value="2026-04-10">Apr 10</option><option value="2026-04-09">Apr 09</option><option value="2026-04-07">Apr 07</option><option value="2026-04-06">Apr 06</option><option value="2026-04-05">Apr 05</option><option value="2026-04-04">Apr 04</option>
+      </select>
+    </div>
+      </div>
+    </div>
+    <canvas id="stC" height="110"></canvas>
+  </div>
+  <div class="sec">YTD Summary <span class="stag bq">logistics_earnings</span></div>
+  <div class="tc"><table>
+    <thead><tr><th>Store</th><th class="r">YTD Orders</th><th class="r">First Active</th><th class="r">Active Days</th><th class="r">Avg/Day</th></tr></thead>
+    <tbody id="ytdtb"></tbody>
+  </table></div>
+</div>
+
+<!-- ══ TAB 2: DELAYS ══ -->
+<div class="pane" id="p2">
+  <div class="frow">
+    <div class="fg"><label>Month</label>
+      <select id="qm" onchange="rQual()">
+        <option value="ALL">All (ATA from May 27)</option>
+        <option value="2026-05">May 2026</option>
+        <option value="2026-06" selected>June 2026</option>
+      </select>
+    </div>
+    <div class="fg"><label>Store</label>
+      <select id="qs" onchange="rQual()"><option value="ALL">All Stores</option></select>
+    </div>
+    <div class="fg"><label>Day</label>
+      <select id="q-day" onchange="rQual()">
+        <option value="ALL">All Days</option><optgroup label="── June 2026 ──"><option value="2026-06-24">Jun 24</option><option value="2026-06-23">Jun 23</option><option value="2026-06-22">Jun 22</option><option value="2026-06-21">Jun 21</option><option value="2026-06-20">Jun 20</option><option value="2026-06-19">Jun 19</option><option value="2026-06-18">Jun 18</option><option value="2026-06-17">Jun 17</option><option value="2026-06-16">Jun 16</option><option value="2026-06-15">Jun 15</option><option value="2026-06-14">Jun 14</option><option value="2026-06-13">Jun 13</option><option value="2026-06-12">Jun 12</option><option value="2026-06-11">Jun 11</option><option value="2026-06-10">Jun 10</option><option value="2026-06-09">Jun 09</option><option value="2026-06-08">Jun 08</option><option value="2026-06-07">Jun 07</option><option value="2026-06-06">Jun 06</option><option value="2026-06-05">Jun 05</option><option value="2026-06-04">Jun 04</option><option value="2026-06-03">Jun 03</option><option value="2026-06-02">Jun 02</option><option value="2026-06-01">Jun 01</option><optgroup label="── May 2026 ──"><option value="2026-05-31">May 31</option><option value="2026-05-30">May 30</option><option value="2026-05-29">May 29</option><option value="2026-05-28">May 28</option><option value="2026-05-27">May 27</option><option value="2026-05-26">May 26</option><option value="2026-05-25">May 25</option><option value="2026-05-24">May 24</option><option value="2026-05-23">May 23</option><option value="2026-05-22">May 22</option><option value="2026-05-21">May 21</option><option value="2026-05-20">May 20</option><option value="2026-05-19">May 19</option><option value="2026-05-18">May 18</option><option value="2026-05-17">May 17</option><option value="2026-05-16">May 16</option><option value="2026-05-15">May 15</option><option value="2026-05-14">May 14</option><option value="2026-05-13">May 13</option><option value="2026-05-12">May 12</option><option value="2026-05-11">May 11</option><option value="2026-05-10">May 10</option><option value="2026-05-09">May 09</option><option value="2026-05-08">May 08</option><option value="2026-05-07">May 07</option><option value="2026-05-06">May 06</option><option value="2026-05-05">May 05</option><option value="2026-05-04">May 04</option><option value="2026-05-03">May 03</option><option value="2026-05-02">May 02</option><option value="2026-05-01">May 01</option><optgroup label="── April 2026 ──"><option value="2026-04-30">Apr 30</option><option value="2026-04-29">Apr 29</option><option value="2026-04-28">Apr 28</option><option value="2026-04-27">Apr 27</option><option value="2026-04-26">Apr 26</option><option value="2026-04-25">Apr 25</option><option value="2026-04-24">Apr 24</option><option value="2026-04-23">Apr 23</option><option value="2026-04-22">Apr 22</option><option value="2026-04-21">Apr 21</option><option value="2026-04-20">Apr 20</option><option value="2026-04-19">Apr 19</option><option value="2026-04-18">Apr 18</option><option value="2026-04-17">Apr 17</option><option value="2026-04-16">Apr 16</option><option value="2026-04-15">Apr 15</option><option value="2026-04-14">Apr 14</option><option value="2026-04-13">Apr 13</option><option value="2026-04-12">Apr 12</option><option value="2026-04-11">Apr 11</option><option value="2026-04-10">Apr 10</option><option value="2026-04-09">Apr 09</option><option value="2026-04-07">Apr 07</option><option value="2026-04-06">Apr 06</option><option value="2026-04-05">Apr 05</option><option value="2026-04-04">Apr 04</option>
+      </select>
+    </div>
+  </div>
+  <div class="sec">Delay Summary <span class="stag bq">ATA &gt; 15 min · ops_daily_view_hist</span></div>
+  <div class="row">
+    <div class="card kpi">
+      <div class="lbl">Delivered</div>
+      <div class="val" style="color:var(--teal)" id="qd">—</div>
+      <div class="sub" id="qds"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4;border-top:1px solid var(--bdr);padding-top:5px">Orders with <strong style="color:var(--text)">status = delivered</strong> in the selected period</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Delayed &gt;15 min</div>
+      <div class="val" style="color:var(--warn)" id="qdl">—</div>
+      <div class="sub" id="qdls"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4;border-top:1px solid var(--bdr);padding-top:5px"><strong style="color:var(--text)">ATA &gt; 15 min</strong> — Actual Time of Arrival exceeded 15 minutes from pickup</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Avg ATA</div>
+      <div class="val" id="qa">—</div>
+      <div class="sub">minutes · weighted avg</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4;border-top:1px solid var(--bdr);padding-top:5px"><strong style="color:var(--text)">ATA</strong> — Actual Time of Arrival: time from rider pickup to customer door (minutes)</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Breach (ATA &gt; ETA)</div>
+      <div class="val" style="color:var(--danger)" id="qb">—</div>
+      <div class="sub" id="qbs"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4;border-top:1px solid var(--bdr);padding-top:5px"><strong style="color:var(--text)">Breach</strong> — ATA exceeded ETA (Estimated Time of Arrival). Customer received order later than promised</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+    <div class="cc" style="flex:1;min-width:250px;margin-bottom:0">
+      <div class="ch">
+        <h3>Delayed Orders by Store</h3>
+        <select id="qmet" onchange="rQual()">
+          <option value="dly">Delay Count</option>
+          <option value="dly_pct">Delay %</option>
+          <option value="br_pct">Breach %</option>
+        </select>
+      </div>
+      <div style="position:relative;max-width:260px;margin:0 auto">
+        <canvas id="dlyD" height="230"></canvas>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+          <div style="font-size:19px;font-weight:700;color:var(--warn)" id="dv">—</div>
+          <div style="font-size:9px;color:var(--muted)" id="dlbl">delayed</div>
+        </div>
+      </div>
+      <div id="dleg" style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px"></div>
+    </div>
+    <div class="cc" style="flex:1;min-width:250px;margin-bottom:0">
+      <div class="ch"><h3>Breach % by Store</h3></div>
+      <canvas id="brB" height="230"></canvas>
+    </div>
+  </div>
+  <div class="sec">Complaints <span class="stag bq">BigQuery</span></div>
+  <div class="row">
+    <div class="card kpi">
+      <div class="lbl">Total Complaints</div>
+      <div class="val" style="color:var(--warn)" id="qc">—</div>
+      <div class="sub" id="qcs"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4;border-top:1px solid var(--bdr);padding-top:5px">Orders where customer filed at least one complaint (delay, quality, wrong item, missing parts, rider misconduct etc.)</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Complaint Rate</div>
+      <div class="val" id="qcr">—</div>
+      <div class="sub">% of delivered</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4;border-top:1px solid var(--bdr);padding-top:5px">Complaints ÷ Delivered × 100. Healthy target: <strong style="color:var(--ok)">&lt;1.5%</strong></div>
+    </div>
+  </div>
+  <div class="cc"><div class="ch"><h3>Complaints by Store</h3></div><canvas id="cmpB" height="65"></canvas></div>
+  <div class="tc"><h3>Store Detail</h3>
+    <table><thead><tr>
+      <th>Store</th><th class="r">Delivered</th><th class="r">Delayed</th>
+      <th class="r">Delay%</th><th class="r">Avg ATA</th>
+      <th class="r">Breach%</th><th class="r">Complaints</th><th class="r">Cmp%</th>
+    </tr></thead><tbody id="qtb"></tbody></table>
+  </div>
+</div>
+
+<!-- ══ TAB 3: VENDORS ══ -->
+<div class="pane" id="p3">
+  <div class="frow">
+    <div class="fg"><label>Month</label>
+      <select id="vm" onchange="rVend()">
+        <option value="ALL">All Months</option>
+        <option value="2026-05">May 2026</option>
+        <option value="2026-06" selected>June 2026</option>
+      </select>
+    </div>
+    <div class="fg"><label>Store</label>
+      <select id="vs" onchange="rVend()"><option value="ALL">All Stores</option></select>
+    </div>
+    <div class="fg"><label>Vendor</label>
+      <select id="vv" onchange="rVend()"><option value="ALL">All Vendors</option></select>
+    </div>
+    <div class="fg"><label>Day</label>
+      <select id="v-day" onchange="rVend()">
+        <option value="ALL">All Days</option><optgroup label="── June 2026 ──"><option value="2026-06-24">Jun 24</option><option value="2026-06-23">Jun 23</option><option value="2026-06-22">Jun 22</option><option value="2026-06-21">Jun 21</option><option value="2026-06-20">Jun 20</option><option value="2026-06-19">Jun 19</option><option value="2026-06-18">Jun 18</option><option value="2026-06-17">Jun 17</option><option value="2026-06-16">Jun 16</option><option value="2026-06-15">Jun 15</option><option value="2026-06-14">Jun 14</option><option value="2026-06-13">Jun 13</option><option value="2026-06-12">Jun 12</option><option value="2026-06-11">Jun 11</option><option value="2026-06-10">Jun 10</option><option value="2026-06-09">Jun 09</option><option value="2026-06-08">Jun 08</option><option value="2026-06-07">Jun 07</option><option value="2026-06-06">Jun 06</option><option value="2026-06-05">Jun 05</option><option value="2026-06-04">Jun 04</option><option value="2026-06-03">Jun 03</option><option value="2026-06-02">Jun 02</option><option value="2026-06-01">Jun 01</option><optgroup label="── May 2026 ──"><option value="2026-05-31">May 31</option><option value="2026-05-30">May 30</option><option value="2026-05-29">May 29</option><option value="2026-05-28">May 28</option><option value="2026-05-27">May 27</option><option value="2026-05-26">May 26</option><option value="2026-05-25">May 25</option><option value="2026-05-24">May 24</option><option value="2026-05-23">May 23</option><option value="2026-05-22">May 22</option><option value="2026-05-21">May 21</option><option value="2026-05-20">May 20</option><option value="2026-05-19">May 19</option><option value="2026-05-18">May 18</option><option value="2026-05-17">May 17</option><option value="2026-05-16">May 16</option><option value="2026-05-15">May 15</option><option value="2026-05-14">May 14</option><option value="2026-05-13">May 13</option><option value="2026-05-12">May 12</option><option value="2026-05-11">May 11</option><option value="2026-05-10">May 10</option><option value="2026-05-09">May 09</option><option value="2026-05-08">May 08</option><option value="2026-05-07">May 07</option><option value="2026-05-06">May 06</option><option value="2026-05-05">May 05</option><option value="2026-05-04">May 04</option><option value="2026-05-03">May 03</option><option value="2026-05-02">May 02</option><option value="2026-05-01">May 01</option><optgroup label="── April 2026 ──"><option value="2026-04-30">Apr 30</option><option value="2026-04-29">Apr 29</option><option value="2026-04-28">Apr 28</option><option value="2026-04-27">Apr 27</option><option value="2026-04-26">Apr 26</option><option value="2026-04-25">Apr 25</option><option value="2026-04-24">Apr 24</option><option value="2026-04-23">Apr 23</option><option value="2026-04-22">Apr 22</option><option value="2026-04-21">Apr 21</option><option value="2026-04-20">Apr 20</option><option value="2026-04-19">Apr 19</option><option value="2026-04-18">Apr 18</option><option value="2026-04-17">Apr 17</option><option value="2026-04-16">Apr 16</option><option value="2026-04-15">Apr 15</option><option value="2026-04-14">Apr 14</option><option value="2026-04-13">Apr 13</option><option value="2026-04-12">Apr 12</option><option value="2026-04-11">Apr 11</option><option value="2026-04-10">Apr 10</option><option value="2026-04-09">Apr 09</option><option value="2026-04-07">Apr 07</option><option value="2026-04-06">Apr 06</option><option value="2026-04-05">Apr 05</option><option value="2026-04-04">Apr 04</option>
+      </select>
+    </div>
+  </div>
+  <div class="sec">Vendor KPIs <span class="stag bq">BigQuery</span></div>
+  <div class="row">
+    <div class="card kpi"><div class="lbl">Active Vendors</div><div class="val" style="color:var(--teal)" id="vcnt">—</div><div class="sub" id="vcnts"></div></div>
+    <div class="card kpi"><div class="lbl">Total Orders</div><div class="val" style="color:var(--gold)" id="vord">—</div><div class="sub" id="vords"></div></div>
+    <div class="card kpi"><div class="lbl">Breach %</div><div class="val" style="color:var(--danger)" id="vbr">—</div><div class="sub">weighted avg</div></div>
+    <div class="card kpi"><div class="lbl">Avg Del Time</div><div class="val" id="vdt">—</div><div class="sub">minutes</div></div>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+    <div class="cc" style="flex:1;min-width:240px;margin-bottom:0">
+      <div class="ch"><h3>Vendor Order Share</h3></div>
+      <div style="position:relative;max-width:240px;margin:0 auto">
+        <canvas id="vsD" height="210"></canvas>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+          <div style="font-size:15px;font-weight:700;color:var(--teal)" id="vdtot">—</div>
+          <div style="font-size:9px;color:var(--muted)">orders</div>
+        </div>
+      </div>
+      <div id="vsleg" style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px"></div>
+    </div>
+    <div class="cc" style="flex:2;min-width:280px;margin-bottom:0">
+      <div class="ch"><h3>Performance Summary</h3></div>
+      <table style="font-size:11px"><thead><tr>
+        <th>Vendor</th><th class="r">Orders</th><th class="r">Share</th>
+        <th class="r">Breach%</th><th class="r">Avg Del</th><th class="r">Riders</th>
+      </tr></thead><tbody id="vstb"></tbody></table>
+    </div>
+  </div>
+  <div class="cc"><div class="ch"><h3 id="vbh">Orders by Vendor</h3></div><canvas id="voB" height="100"></canvas></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+    <div class="cc" style="flex:1;min-width:240px;margin-bottom:0"><div class="ch"><h3>Breach % by Vendor</h3></div><canvas id="vbrB" height="140"></canvas></div>
+    <div class="cc" style="flex:1;min-width:240px;margin-bottom:0"><div class="ch"><h3>Avg Del Time (min)</h3></div><canvas id="vdtB" height="140"></canvas></div>
+  </div>
+  <div class="cc">
+    <div class="ch">
+      <h3>Monthly Trend by Vendor</h3>
+      <div class="fg"><label>Vendor</label>
+        <select id="vtv" onchange="rVTrend()"><option value="ALL">All Vendors</option></select>
+      </div>
+    </div>
+    <canvas id="vtC" height="110"></canvas>
+  </div>
+  <div class="tc">
+    <h3 id="vsth">Vendor × Store Breakdown</h3>
+    <table><thead><tr>
+      <th>Vendor</th><th>Store</th><th class="r">Orders</th>
+      <th class="r">Store Share</th><th class="r">Breach%</th>
+      <th class="r">Avg Del</th><th class="r">Riders</th>
+    </tr></thead><tbody id="vsxtb"></tbody></table>
+  </div>
+</div>
+
+<!-- ══ TAB 4: UTILIZATION ══ -->
+<div class="pane" id="p4">
+  <div class="frow">
+    <div class="fg"><label>Month</label>
+      <select id="u-mo" onchange="rUtil()">
+        <option value="ALL">All Months</option>
+        <option value="2026-05">May 2026</option>
+        <option value="2026-06" selected>June 2026</option>
+      </select>
+    </div>
+    <div class="fg"><label>Store</label>
+      <select id="u-st" onchange="rUtil()"><option value="ALL">All Stores</option></select>
+    </div>
+    <div class="fg"><label>Day</label>
+      <select id="u-day" onchange="rUtil()">
+        <option value="ALL">All Days</option><optgroup label="── June 2026 ──"><option value="2026-06-24">Jun 24</option><option value="2026-06-23">Jun 23</option><option value="2026-06-22">Jun 22</option><option value="2026-06-21">Jun 21</option><option value="2026-06-20">Jun 20</option><option value="2026-06-19">Jun 19</option><option value="2026-06-18">Jun 18</option><option value="2026-06-17">Jun 17</option><option value="2026-06-16">Jun 16</option><option value="2026-06-15">Jun 15</option><option value="2026-06-14">Jun 14</option><option value="2026-06-13">Jun 13</option><option value="2026-06-12">Jun 12</option><option value="2026-06-11">Jun 11</option><option value="2026-06-10">Jun 10</option><option value="2026-06-09">Jun 09</option><option value="2026-06-08">Jun 08</option><option value="2026-06-07">Jun 07</option><option value="2026-06-06">Jun 06</option><option value="2026-06-05">Jun 05</option><option value="2026-06-04">Jun 04</option><option value="2026-06-03">Jun 03</option><option value="2026-06-02">Jun 02</option><option value="2026-06-01">Jun 01</option><optgroup label="── May 2026 ──"><option value="2026-05-31">May 31</option><option value="2026-05-30">May 30</option><option value="2026-05-29">May 29</option><option value="2026-05-28">May 28</option><option value="2026-05-27">May 27</option><option value="2026-05-26">May 26</option><option value="2026-05-25">May 25</option><option value="2026-05-24">May 24</option><option value="2026-05-23">May 23</option><option value="2026-05-22">May 22</option><option value="2026-05-21">May 21</option><option value="2026-05-20">May 20</option><option value="2026-05-19">May 19</option><option value="2026-05-18">May 18</option><option value="2026-05-17">May 17</option><option value="2026-05-16">May 16</option><option value="2026-05-15">May 15</option><option value="2026-05-14">May 14</option><option value="2026-05-13">May 13</option><option value="2026-05-12">May 12</option><option value="2026-05-11">May 11</option><option value="2026-05-10">May 10</option><option value="2026-05-09">May 09</option><option value="2026-05-08">May 08</option><option value="2026-05-07">May 07</option><option value="2026-05-06">May 06</option><option value="2026-05-05">May 05</option><option value="2026-05-04">May 04</option><option value="2026-05-03">May 03</option><option value="2026-05-02">May 02</option><option value="2026-05-01">May 01</option><optgroup label="── April 2026 ──"><option value="2026-04-30">Apr 30</option><option value="2026-04-29">Apr 29</option><option value="2026-04-28">Apr 28</option><option value="2026-04-27">Apr 27</option><option value="2026-04-26">Apr 26</option><option value="2026-04-25">Apr 25</option><option value="2026-04-24">Apr 24</option><option value="2026-04-23">Apr 23</option><option value="2026-04-22">Apr 22</option><option value="2026-04-21">Apr 21</option><option value="2026-04-20">Apr 20</option><option value="2026-04-19">Apr 19</option><option value="2026-04-18">Apr 18</option><option value="2026-04-17">Apr 17</option><option value="2026-04-16">Apr 16</option><option value="2026-04-15">Apr 15</option><option value="2026-04-14">Apr 14</option><option value="2026-04-13">Apr 13</option><option value="2026-04-12">Apr 12</option><option value="2026-04-11">Apr 11</option><option value="2026-04-10">Apr 10</option><option value="2026-04-09">Apr 09</option><option value="2026-04-07">Apr 07</option><option value="2026-04-06">Apr 06</option><option value="2026-04-05">Apr 05</option><option value="2026-04-04">Apr 04</option>
+      </select>
+    </div>
+  </div>
+  <div class="sec">Rider Utilization KPIs <span class="stag bq">BigQuery · vendor_dashboard_performance_eg</span></div>
+  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--muted);line-height:1.6">
+    <strong style="color:var(--text)">How to read:</strong>
+    <strong style="color:var(--teal)">Orders/Rider/Day</strong> = relative volume handled per active rider (higher = more utilized).
+    <strong style="color:var(--gold)">Avg Del Time</strong> = minutes from pickup to door (lower = more efficient).
+    <strong style="color:#a78bfa">Distance</strong> = km per delivery (reflects territory size).
+    Use these metrics to <em>compare stores relative to each other</em>, not as absolute delivery counts.
+  </div>
+  <div class="row" id="u-kpis"></div>
+  <div class="sec">Orders per Rider — Store Comparison <span class="stag bq">Higher = more utilized fleet</span></div>
+  <div class="cc">
+    <div class="ch"><h3 id="u-bar-h">Orders / Rider by Store</h3></div>
+    <canvas id="uOprBar" height="100"></canvas>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+    <div class="cc" style="flex:1;min-width:260px;margin-bottom:0">
+      <div class="ch"><h3>Avg Delivery Time by Store (min)</h3></div>
+      <canvas id="uDelBar" height="160"></canvas>
+    </div>
+    <div class="cc" style="flex:1;min-width:260px;margin-bottom:0">
+      <div class="ch"><h3>Avg Distance by Store (km)</h3></div>
+      <canvas id="uDistBar" height="160"></canvas>
+    </div>
+  </div>
+  <div class="cc">
+    <div class="ch">
+      <h3>Daily Orders/Rider Trend</h3>
+      <div class="fg"><label>Store</label>
+        <select id="u-trend-st" onchange="rUtilTrend()"><option value="ALL">All Stores (avg)</option></select>
+      </div>
+    </div>
+    <canvas id="uTrend" height="120"></canvas>
+  </div>
+  <div class="sec">Full Store Utilization Table <span class="stag bq">BigQuery</span></div>
+  <div class="tc"><table><thead><tr>
+    <th>Store</th><th class="r">Active Days</th><th class="r">Avg Daily Riders</th>
+    <th class="r">Orders/Rider</th><th class="r">Avg Del Time</th>
+    <th class="r">Avg Distance</th><th class="r">Breach %</th>
+  </tr></thead><tbody id="u-tbl"></tbody></table></div>
+</div>
+<!-- DOCK -->
+<div class="dock">
+  <span style="color:var(--teal);font-weight:600;font-size:11px">● Live Data</span>
+  <span style="color:var(--muted);font-size:11px">BQ: noonbinimlog</span>
+  <span style="color:#a78bfa;font-size:11px" id="cpo-badge">CPO: CPO_Egypt Sheet (Jun 2026)</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+    <label style="background:#1E3A5F;border:1px dashed #a78bfa;border-radius:7px;padding:5px 12px;cursor:pointer;font-size:11px;color:#a78bfa;display:flex;align-items:center;gap:5px;white-space:nowrap" id="upload-lbl">
+      📂 <span id="upload-txt">Upload CPO Sheet</span>
+      <input type="file" id="cpo-file" accept=".csv" style="display:none" onchange="handleCPOUpload(this)"/>
+    </label>
+    <button id="upload-btn" onclick="applyCPOUpload()" disabled
+      style="background:var(--teal);color:#0A1929;border:none;border-radius:7px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;opacity:.4">
+      Load ↑
+    </button>
+  </div>
+</div>
+<div id="upload-toast" style="position:fixed;bottom:52px;left:50%;transform:translateX(-50%);background:#0D2137;border:1px solid var(--teal);border-radius:7px;padding:6px 14px;font-size:11px;color:var(--teal);z-index:200;display:none;white-space:nowrap"></div>
+
+<script>
+
+// ── BQ DATA ──
+const BQ=[{"d":"2026-04-04","s":"First Settlement - El Banafseg","del":1,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-05","s":"First Settlement - El Banafseg","del":5,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-06","s":"First Settlement - El Banafseg","del":1,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-07","s":"First Settlement - El Banafseg","del":3,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-09","s":"First Settlement - El Banafseg","del":41,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-10","s":"First Settlement - El Banafseg","del":207,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-11","s":"Fifth Settlement - 1st District","del":4,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-11","s":"First Settlement - El Banafseg","del":72,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-12","s":"Fifth Settlement - 1st District","del":63,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-12","s":"First Settlement - El Banafseg","del":104,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-13","s":"Fifth Settlement - 1st District","del":121,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-13","s":"First Settlement - El Banafseg","del":88,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-14","s":"Fifth Settlement - 1st District","del":119,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-14","s":"First Settlement - El Banafseg","del":102,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-15","s":"Dokki","del":21,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-15","s":"Fifth Settlement - 1st District","del":109,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-15","s":"First Settlement - El Banafseg","del":129,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-16","s":"Dokki","del":89,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-16","s":"Fifth Settlement - 1st District","del":210,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-16","s":"First Settlement - El Banafseg","del":134,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-17","s":"Dokki","del":191,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-17","s":"Fifth Settlement - 1st District","del":172,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-17","s":"First Settlement - El Banafseg","del":197,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-18","s":"Dokki","del":101,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-18","s":"Fifth Settlement - 1st District","del":215,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-18","s":"First Settlement - El Banafseg","del":149,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-19","s":"Dokki","del":144,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-19","s":"Fifth Settlement - 1st District","del":209,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-19","s":"First Settlement - El Banafseg","del":129,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-20","s":"Dokki","del":186,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-20","s":"Fifth Settlement - 1st District","del":230,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-20","s":"First Settlement - El Banafseg","del":218,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-21","s":"Dokki","del":201,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-21","s":"Fifth Settlement - 1st District","del":274,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-21","s":"First Settlement - El Banafseg","del":145,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-22","s":"Dokki","del":190,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-22","s":"Fifth Settlement - 1st District","del":311,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-22","s":"First Settlement - El Banafseg","del":184,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-22","s":"New Cairo - One Golden SQ","del":2,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-23","s":"Dokki","del":171,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-23","s":"Fifth Settlement - 1st District","del":263,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-23","s":"First Settlement - El Banafseg","del":214,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-23","s":"New Cairo - One Golden SQ","del":81,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-24","s":"6th of October","del":1,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-24","s":"Dokki","del":255,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-24","s":"Fifth Settlement - 1st District","del":394,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-24","s":"First Settlement - El Banafseg","del":312,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-24","s":"New Cairo - One Golden SQ","del":182,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-25","s":"6th of October","del":2,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-25","s":"Dokki","del":138,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-25","s":"Fifth Settlement - 1st District","del":231,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-25","s":"First Settlement - El Banafseg","del":186,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-25","s":"New Cairo - One Golden SQ","del":121,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-26","s":"6th of October","del":106,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-26","s":"Dokki","del":155,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-26","s":"Fifth Settlement - 1st District","del":226,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-26","s":"First Settlement - El Banafseg","del":165,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-26","s":"New Cairo - One Golden SQ","del":120,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-27","s":"6th of October","del":110,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-27","s":"Dokki","del":187,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-27","s":"Fifth Settlement - 1st District","del":268,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-27","s":"First Settlement - El Banafseg","del":164,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-27","s":"New Cairo - One Golden SQ","del":121,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-28","s":"6th of October","del":84,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-28","s":"Dokki","del":166,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-28","s":"Fifth Settlement - 1st District","del":280,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-28","s":"First Settlement - El Banafseg","del":204,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-28","s":"New Cairo - One Golden SQ","del":143,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-29","s":"6th of October","del":106,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-29","s":"Dokki","del":186,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-29","s":"Fifth Settlement - 1st District","del":298,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-29","s":"First Settlement - El Banafseg","del":181,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-29","s":"Hadayek Al Ahram 2","del":8,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-29","s":"New Cairo - One Golden SQ","del":132,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-30","s":"6th of October","del":143,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-30","s":"Dokki","del":166,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-30","s":"Fifth Settlement - 1st District","del":252,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-30","s":"First Settlement - El Banafseg","del":169,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-30","s":"Hadayek Al Ahram 2","del":146,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-04-30","s":"New Cairo - One Golden SQ","del":114,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-01","s":"6th of October","del":233,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-01","s":"Dokki","del":188,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-01","s":"Fifth Settlement - 1st District","del":297,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-01","s":"First Settlement - El Banafseg","del":219,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-01","s":"Hadayek Al Ahram 2","del":226,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-01","s":"New Cairo - One Golden SQ","del":164,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-02","s":"6th of October","del":220,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-02","s":"Dokki","del":201,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-02","s":"Fifth Settlement - 1st District","del":340,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-02","s":"First Settlement - El Banafseg","del":268,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-02","s":"Hadayek Al Ahram 2","del":243,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-02","s":"New Cairo - One Golden SQ","del":30,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-03","s":"6th of October","del":142,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-03","s":"Dokki","del":127,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-03","s":"Fifth Settlement - 1st District","del":288,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-03","s":"First Settlement - El Banafseg","del":173,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-03","s":"Hadayek Al Ahram 2","del":198,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-04","s":"6th of October","del":159,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-04","s":"Dokki","del":163,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-04","s":"Fifth Settlement - 1st District","del":263,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-04","s":"First Settlement - El Banafseg","del":170,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-04","s":"Hadayek Al Ahram 2","del":171,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-04","s":"New Cairo - One Golden SQ","del":178,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-05","s":"6th of October","del":206,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-05","s":"Dokki","del":200,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-05","s":"Fifth Settlement - 1st District","del":304,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-05","s":"First Settlement - El Banafseg","del":180,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-05","s":"Hadayek Al Ahram 2","del":253,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-05","s":"New Cairo - One Golden SQ","del":163,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-06","s":"6th of October","del":115,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-06","s":"Dokki","del":137,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-06","s":"Fifth Settlement - 1st District","del":267,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-06","s":"First Settlement - El Banafseg","del":182,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-06","s":"Hadayek Al Ahram 2","del":183,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-06","s":"New Cairo - One Golden SQ","del":143,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-07","s":"6th of October","del":170,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-07","s":"Dokki","del":127,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-07","s":"Fifth Settlement - 1st District","del":271,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-07","s":"First Settlement - El Banafseg","del":122,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-07","s":"Hadayek Al Ahram 2","del":228,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-07","s":"New Cairo - One Golden SQ","del":125,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-08","s":"6th of October","del":334,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-08","s":"Dokki","del":302,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-08","s":"Fifth Settlement - 1st District","del":412,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-08","s":"First Settlement - El Banafseg","del":366,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-08","s":"Hadayek Al Ahram 2","del":323,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-08","s":"New Cairo - One Golden SQ","del":183,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-09","s":"6th of October","del":244,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-09","s":"Dokki","del":152,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-09","s":"Fifth Settlement - 1st District","del":296,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-09","s":"First Settlement - El Banafseg","del":295,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-09","s":"Hadayek Al Ahram 2","del":253,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-09","s":"New Cairo - One Golden SQ","del":154,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-10","s":"6th of October","del":193,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-10","s":"Dokki","del":144,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-10","s":"Fifth Settlement - 1st District","del":265,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-10","s":"First Settlement - El Banafseg","del":191,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-10","s":"Hadayek Al Ahram 2","del":176,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-10","s":"New Cairo - One Golden SQ","del":138,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-11","s":"6th of October","del":161,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-11","s":"Dokki","del":150,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-11","s":"Fifth Settlement - 1st District","del":269,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-11","s":"First Settlement - El Banafseg","del":224,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-11","s":"Hadayek Al Ahram 2","del":208,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-11","s":"New Cairo - One Golden SQ","del":147,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-12","s":"6th of October","del":149,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-12","s":"Dokki","del":133,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-12","s":"Fifth Settlement - 1st District","del":235,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-12","s":"First Settlement - El Banafseg","del":177,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-12","s":"Hadayek Al Ahram 2","del":184,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-12","s":"New Cairo - One Golden SQ","del":143,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-13","s":"6th of October","del":167,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-13","s":"Dokki","del":104,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-13","s":"Fifth Settlement - 1st District","del":290,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-13","s":"First Settlement - El Banafseg","del":212,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-13","s":"Hadayek Al Ahram 2","del":176,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-13","s":"New Cairo - One Golden SQ","del":138,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-14","s":"6th of October","del":171,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-14","s":"Dokki","del":116,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-14","s":"Fifth Settlement - 1st District","del":268,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-14","s":"First Settlement - El Banafseg","del":199,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-14","s":"Hadayek Al Ahram 2","del":184,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-14","s":"Nasr City - 9th District","del":102,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-14","s":"New Cairo - One Golden SQ","del":150,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-15","s":"6th of October","del":169,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-15","s":"Dokki","del":226,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-15","s":"Fifth Settlement - 1st District","del":241,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-15","s":"First Settlement - El Banafseg","del":231,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-15","s":"Hadayek Al Ahram 2","del":212,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-15","s":"Nasr City - 9th District","del":186,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-15","s":"New Cairo - One Golden SQ","del":221,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-16","s":"6th of October","del":153,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-16","s":"Dokki","del":136,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-16","s":"Fifth Settlement - 1st District","del":259,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-16","s":"First Settlement - El Banafseg","del":208,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-16","s":"Hadayek Al Ahram 2","del":190,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-16","s":"Nasr City - 9th District","del":151,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-16","s":"New Cairo - One Golden SQ","del":146,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-17","s":"6th of October","del":183,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-17","s":"Dokki","del":139,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-17","s":"Fifth Settlement - 1st District","del":228,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-17","s":"First Settlement - El Banafseg","del":192,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-17","s":"Hadayek Al Ahram 2","del":219,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-17","s":"Nasr City - 9th District","del":169,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-17","s":"New Cairo - One Golden SQ","del":176,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-18","s":"6th of October","del":178,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-18","s":"Dokki","del":161,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-18","s":"Fifth Settlement - 1st District","del":232,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-18","s":"First Settlement - El Banafseg","del":209,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-18","s":"Hadayek Al Ahram 2","del":178,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-18","s":"Nasr City - 9th District","del":199,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-18","s":"New Cairo - One Golden SQ","del":157,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-18","s":"Sheikh Zayed","del":3,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-19","s":"6th of October","del":172,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-19","s":"Dokki","del":131,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-19","s":"Fifth Settlement - 1st District","del":241,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-19","s":"First Settlement - El Banafseg","del":195,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-19","s":"Hadayek Al Ahram 2","del":194,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-19","s":"Nasr City - 9th District","del":185,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-19","s":"New Cairo - One Golden SQ","del":164,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-19","s":"Sheikh Zayed","del":36,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-20","s":"6th of October","del":152,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-20","s":"Dokki","del":168,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-20","s":"Fifth Settlement - 1st District","del":213,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-20","s":"First Settlement - El Banafseg","del":191,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-20","s":"Hadayek Al Ahram 2","del":200,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-20","s":"Nasr City - 9th District","del":191,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-20","s":"New Cairo - One Golden SQ","del":182,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-20","s":"Sheikh Zayed","del":49,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-21","s":"6th of October","del":235,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-21","s":"Dokki","del":214,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-21","s":"Fifth Settlement - 1st District","del":342,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-21","s":"First Settlement - El Banafseg","del":240,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-21","s":"Hadayek Al Ahram 2","del":293,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-21","s":"Nasr City - 9th District","del":233,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-21","s":"New Cairo - One Golden SQ","del":186,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-21","s":"Sheikh Zayed","del":75,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-22","s":"6th of October","del":234,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-22","s":"Dokki","del":189,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-22","s":"Fifth Settlement - 1st District","del":322,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-22","s":"First Settlement - El Banafseg","del":286,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-22","s":"Hadayek Al Ahram 2","del":305,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-22","s":"Nasr City - 9th District","del":305,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-22","s":"New Cairo - One Golden SQ","del":260,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-22","s":"Sheikh Zayed","del":85,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"6th of October","del":216,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"Dokki","del":155,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"Fifth Settlement - 1st District","del":268,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"First Settlement - El Banafseg","del":256,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"Hadayek Al Ahram 2","del":255,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"Nasr City - 9th District","del":245,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"New Cairo - One Golden SQ","del":185,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"Sheikh Zayed","del":41,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-23","s":"Zahraa Maadi","del":2,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"6th of October","del":260,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"Dokki","del":183,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"Fifth Settlement - 1st District","del":336,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"First Settlement - El Banafseg","del":248,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"Hadayek Al Ahram 2","del":290,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"Nasr City - 9th District","del":236,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"New Cairo - One Golden SQ","del":208,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"Sheikh Zayed","del":59,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-24","s":"Zahraa Maadi","del":56,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"6th of October","del":263,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"Dokki","del":190,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"Fifth Settlement - 1st District","del":309,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"First Settlement - El Banafseg","del":252,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"Hadayek Al Ahram 2","del":309,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"Marassi 2 - North Coast","del":4,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"Nasr City - 9th District","del":268,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"New Cairo - One Golden SQ","del":201,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"Sheikh Zayed","del":85,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-25","s":"Zahraa Maadi","del":103,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"6th of October","del":257,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"Dokki","del":181,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"Fifth Settlement - 1st District","del":276,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"First Settlement - El Banafseg","del":246,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"Hadayek Al Ahram 2","del":337,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"Marassi 2 - North Coast","del":37,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"Nasr City - 9th District","del":258,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"New Cairo - One Golden SQ","del":178,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"Sheikh Zayed","del":72,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-26","s":"Zahraa Maadi","del":134,"dly":0,"br":0,"ata":0,"cmp":0},
+{"d":"2026-05-27","s":"6th of October","del":212,"dly":49,"br":83,"ata":12.8,"cmp":5},
+{"d":"2026-05-27","s":"Dokki","del":182,"dly":47,"br":58,"ata":12.7,"cmp":2},
+{"d":"2026-05-27","s":"Fifth Settlement - 1st District","del":228,"dly":175,"br":147,"ata":25.8,"cmp":11},
+{"d":"2026-05-27","s":"First Settlement - El Banafseg","del":206,"dly":121,"br":106,"ata":20,"cmp":6},
+{"d":"2026-05-27","s":"Hadayek Al Ahram 2","del":259,"dly":17,"br":42,"ata":10.1,"cmp":1},
+{"d":"2026-05-27","s":"Marassi 2 - North Coast","del":138,"dly":83,"br":94,"ata":20.2,"cmp":3},
+{"d":"2026-05-27","s":"Nasr City - 9th District","del":177,"dly":115,"br":125,"ata":17.7,"cmp":3},
+{"d":"2026-05-27","s":"New Cairo - One Golden SQ","del":161,"dly":137,"br":113,"ata":30.5,"cmp":11},
+{"d":"2026-05-27","s":"Sheikh Zayed","del":37,"dly":17,"br":13,"ata":13.7,"cmp":1},
+{"d":"2026-05-27","s":"Zahraa Maadi","del":118,"dly":54,"br":79,"ata":15.6,"cmp":1},
+{"d":"2026-05-28","s":"6th of October","del":200,"dly":53,"br":55,"ata":12.5,"cmp":2},
+{"d":"2026-05-28","s":"Dokki","del":152,"dly":28,"br":33,"ata":12,"cmp":2},
+{"d":"2026-05-28","s":"Fifth Settlement - 1st District","del":221,"dly":138,"br":138,"ata":19,"cmp":7},
+{"d":"2026-05-28","s":"First Settlement - El Banafseg","del":207,"dly":100,"br":87,"ata":18,"cmp":8},
+{"d":"2026-05-28","s":"Hadayek Al Ahram 2","del":285,"dly":14,"br":47,"ata":9.8,"cmp":4},
+{"d":"2026-05-28","s":"Marassi 2 - North Coast","del":239,"dly":142,"br":138,"ata":18.7,"cmp":6},
+{"d":"2026-05-28","s":"Nasr City - 9th District","del":235,"dly":132,"br":140,"ata":16.4,"cmp":3},
+{"d":"2026-05-28","s":"New Cairo - One Golden SQ","del":163,"dly":141,"br":103,"ata":23.5,"cmp":2},
+{"d":"2026-05-28","s":"Sheikh Zayed","del":47,"dly":23,"br":14,"ata":13,"cmp":1},
+{"d":"2026-05-28","s":"Zahraa Maadi","del":135,"dly":60,"br":77,"ata":15,"cmp":4},
+{"d":"2026-05-29","s":"6th of October","del":234,"dly":34,"br":79,"ata":11.5,"cmp":6},
+{"d":"2026-05-29","s":"Dokki","del":132,"dly":23,"br":30,"ata":11.9,"cmp":2},
+{"d":"2026-05-29","s":"Fifth Settlement - 1st District","del":266,"dly":191,"br":186,"ata":26.5,"cmp":17},
+{"d":"2026-05-29","s":"First Settlement - El Banafseg","del":223,"dly":134,"br":124,"ata":21.4,"cmp":11},
+{"d":"2026-05-29","s":"Hadayek Al Ahram 2","del":323,"dly":27,"br":75,"ata":10.5,"cmp":5},
+{"d":"2026-05-29","s":"Marassi 2 - North Coast","del":259,"dly":158,"br":147,"ata":19.5,"cmp":2},
+{"d":"2026-05-29","s":"Nasr City - 9th District","del":229,"dly":136,"br":139,"ata":16.8,"cmp":3},
+{"d":"2026-05-29","s":"New Cairo - One Golden SQ","del":174,"dly":163,"br":154,"ata":42.9,"cmp":22},
+{"d":"2026-05-29","s":"Sheikh Zayed","del":39,"dly":15,"br":14,"ata":14.4,"cmp":1},
+{"d":"2026-05-29","s":"Zahraa Maadi","del":139,"dly":63,"br":78,"ata":14.2,"cmp":0},
+{"d":"2026-05-30","s":"6th of October","del":268,"dly":59,"br":112,"ata":12.8,"cmp":4},
+{"d":"2026-05-30","s":"Dokki","del":148,"dly":30,"br":41,"ata":12,"cmp":5},
+{"d":"2026-05-30","s":"Fifth Settlement - 1st District","del":267,"dly":199,"br":180,"ata":22.8,"cmp":9},
+{"d":"2026-05-30","s":"First Settlement - El Banafseg","del":252,"dly":142,"br":161,"ata":24,"cmp":15},
+{"d":"2026-05-30","s":"Hadayek Al Ahram 2","del":311,"dly":27,"br":89,"ata":10.4,"cmp":5},
+{"d":"2026-05-30","s":"Marassi 2 - North Coast","del":273,"dly":148,"br":139,"ata":16.8,"cmp":2},
+{"d":"2026-05-30","s":"Nasr City - 9th District","del":288,"dly":160,"br":184,"ata":17,"cmp":3},
+{"d":"2026-05-30","s":"New Cairo - One Golden SQ","del":126,"dly":119,"br":116,"ata":59.4,"cmp":27},
+{"d":"2026-05-30","s":"Sheikh Zayed","del":74,"dly":47,"br":31,"ata":16.3,"cmp":1},
+{"d":"2026-05-30","s":"Zahraa Maadi","del":209,"dly":125,"br":117,"ata":17.6,"cmp":2},
+{"d":"2026-05-31","s":"6th of October","del":273,"dly":50,"br":99,"ata":12.4,"cmp":5},
+{"d":"2026-05-31","s":"Dokki","del":174,"dly":27,"br":36,"ata":11.8,"cmp":5},
+{"d":"2026-05-31","s":"Fifth Settlement - 1st District","del":292,"dly":213,"br":192,"ata":24.7,"cmp":12},
+{"d":"2026-05-31","s":"First Settlement - El Banafseg","del":255,"dly":159,"br":162,"ata":24.5,"cmp":21},
+{"d":"2026-05-31","s":"Hadayek Al Ahram 2","del":337,"dly":33,"br":89,"ata":10.4,"cmp":4},
+{"d":"2026-05-31","s":"Marassi 2 - North Coast","del":128,"dly":33,"br":40,"ata":12.4,"cmp":1},
+{"d":"2026-05-31","s":"Nasr City - 9th District","del":245,"dly":154,"br":152,"ata":18.6,"cmp":5},
+{"d":"2026-05-31","s":"New Cairo - One Golden SQ","del":213,"dly":195,"br":166,"ata":36.5,"cmp":17},
+{"d":"2026-05-31","s":"Sheikh Zayed","del":48,"dly":19,"br":13,"ata":14.4,"cmp":1},
+{"d":"2026-05-31","s":"Zahraa Maadi","del":186,"dly":122,"br":88,"ata":19.4,"cmp":3},
+{"d":"2026-06-01","s":"6th of October","del":264,"dly":67,"br":93,"ata":13.4,"cmp":3},
+{"d":"2026-06-01","s":"Dokki","del":195,"dly":34,"br":37,"ata":11.7,"cmp":4},
+{"d":"2026-06-01","s":"Fifth Settlement - 1st District","del":291,"dly":215,"br":167,"ata":26.2,"cmp":16},
+{"d":"2026-06-01","s":"First Settlement - El Banafseg","del":245,"dly":158,"br":153,"ata":27.1,"cmp":16},
+{"d":"2026-06-01","s":"Hadayek Al Ahram 2","del":304,"dly":38,"br":65,"ata":10.5,"cmp":1},
+{"d":"2026-06-01","s":"Marassi 2 - North Coast","del":79,"dly":14,"br":21,"ata":11,"cmp":0},
+{"d":"2026-06-01","s":"Nasr City - 9th District","del":201,"dly":129,"br":116,"ata":17.5,"cmp":2},
+{"d":"2026-06-01","s":"New Cairo - One Golden SQ","del":189,"dly":169,"br":146,"ata":41.3,"cmp":17},
+{"d":"2026-06-01","s":"Sheikh Zayed","del":73,"dly":43,"br":28,"ata":17.2,"cmp":0},
+{"d":"2026-06-01","s":"Zahraa Maadi","del":147,"dly":81,"br":76,"ata":17.7,"cmp":3},
+{"d":"2026-06-02","s":"6th of October","del":257,"dly":98,"br":115,"ata":16.5,"cmp":4},
+{"d":"2026-06-02","s":"Dokki","del":174,"dly":34,"br":32,"ata":12.3,"cmp":2},
+{"d":"2026-06-02","s":"Fifth Settlement - 1st District","del":303,"dly":235,"br":184,"ata":20,"cmp":2},
+{"d":"2026-06-02","s":"First Settlement - El Banafseg","del":231,"dly":142,"br":128,"ata":17.6,"cmp":4},
+{"d":"2026-06-02","s":"Hadayek Al Ahram 2","del":292,"dly":22,"br":61,"ata":10.2,"cmp":3},
+{"d":"2026-06-02","s":"Marassi 2 - North Coast","del":88,"dly":18,"br":27,"ata":11.4,"cmp":0},
+{"d":"2026-06-02","s":"Nasr City - 9th District","del":259,"dly":187,"br":156,"ata":19.3,"cmp":4},
+{"d":"2026-06-02","s":"New Cairo - One Golden SQ","del":197,"dly":173,"br":155,"ata":36.8,"cmp":18},
+{"d":"2026-06-02","s":"Sheikh Zayed","del":78,"dly":38,"br":25,"ata":14.7,"cmp":1},
+{"d":"2026-06-02","s":"Zahraa Maadi","del":164,"dly":102,"br":84,"ata":18.1,"cmp":4},
+{"d":"2026-06-03","s":"6th of October","del":270,"dly":65,"br":125,"ata":13.4,"cmp":2},
+{"d":"2026-06-03","s":"Dokki","del":179,"dly":34,"br":40,"ata":11.9,"cmp":1},
+{"d":"2026-06-03","s":"Fifth Settlement - 1st District","del":246,"dly":216,"br":180,"ata":28.1,"cmp":7},
+{"d":"2026-06-03","s":"First Settlement - El Banafseg","del":230,"dly":127,"br":111,"ata":17,"cmp":5},
+{"d":"2026-06-03","s":"Hadayek Al Ahram 2","del":285,"dly":36,"br":93,"ata":11,"cmp":2},
+{"d":"2026-06-03","s":"Marassi 2 - North Coast","del":66,"dly":11,"br":18,"ata":11,"cmp":0},
+{"d":"2026-06-03","s":"Nasr City - 9th District","del":249,"dly":173,"br":165,"ata":18.5,"cmp":1},
+{"d":"2026-06-03","s":"New Cairo - One Golden SQ","del":205,"dly":170,"br":137,"ata":21.5,"cmp":3},
+{"d":"2026-06-03","s":"Sheikh Zayed","del":96,"dly":46,"br":28,"ata":15.5,"cmp":0},
+{"d":"2026-06-03","s":"Zahraa Maadi","del":167,"dly":101,"br":79,"ata":17.5,"cmp":4},
+{"d":"2026-06-04","s":"6th of October","del":260,"dly":123,"br":122,"ata":17.9,"cmp":11},
+{"d":"2026-06-04","s":"Dokki","del":175,"dly":39,"br":50,"ata":12.6,"cmp":1},
+{"d":"2026-06-04","s":"Fifth Settlement - 1st District","del":284,"dly":202,"br":159,"ata":20.1,"cmp":10},
+{"d":"2026-06-04","s":"First Settlement - El Banafseg","del":227,"dly":143,"br":129,"ata":19.2,"cmp":5},
+{"d":"2026-06-04","s":"Hadayek Al Ahram 2","del":292,"dly":20,"br":77,"ata":10.4,"cmp":2},
+{"d":"2026-06-04","s":"Marassi 2 - North Coast","del":91,"dly":30,"br":35,"ata":13.2,"cmp":1},
+{"d":"2026-06-04","s":"Nasr City - 9th District","del":224,"dly":157,"br":143,"ata":18.2,"cmp":2},
+{"d":"2026-06-04","s":"New Cairo - One Golden SQ","del":203,"dly":183,"br":154,"ata":25.5,"cmp":6},
+{"d":"2026-06-04","s":"Sheikh Zayed","del":75,"dly":22,"br":20,"ata":13.6,"cmp":1},
+{"d":"2026-06-04","s":"Zahraa Maadi","del":147,"dly":66,"br":64,"ata":14.9,"cmp":2},
+{"d":"2026-06-05","s":"6th of October","del":293,"dly":103,"br":160,"ata":14.5,"cmp":5},
+{"d":"2026-06-05","s":"Dokki","del":217,"dly":34,"br":63,"ata":11.8,"cmp":6},
+{"d":"2026-06-05","s":"Fifth Settlement - 1st District","del":374,"dly":299,"br":289,"ata":33.2,"cmp":25},
+{"d":"2026-06-05","s":"First Settlement - El Banafseg","del":337,"dly":205,"br":210,"ata":17.7,"cmp":8},
+{"d":"2026-06-05","s":"Hadayek Al Ahram 2","del":368,"dly":71,"br":130,"ata":11.8,"cmp":4},
+{"d":"2026-06-05","s":"Marassi 2 - North Coast","del":84,"dly":26,"br":31,"ata":13.3,"cmp":0},
+{"d":"2026-06-05","s":"Mokattam 2","del":44,"dly":23,"br":34,"ata":17.4,"cmp":2},
+{"d":"2026-06-05","s":"Nasr City - 9th District","del":322,"dly":223,"br":196,"ata":18.1,"cmp":5},
+{"d":"2026-06-05","s":"New Cairo - One Golden SQ","del":237,"dly":213,"br":178,"ata":26.6,"cmp":3},
+{"d":"2026-06-05","s":"Sheikh Zayed","del":93,"dly":43,"br":33,"ata":15.1,"cmp":2},
+{"d":"2026-06-05","s":"Sherouk","del":2,"dly":0,"br":1,"ata":6.3,"cmp":0},
+{"d":"2026-06-05","s":"Zahraa Maadi","del":210,"dly":103,"br":108,"ata":15.4,"cmp":3},
+{"d":"2026-06-06","s":"6th of October","del":278,"dly":118,"br":153,"ata":17.6,"cmp":4},
+{"d":"2026-06-06","s":"Dokki","del":173,"dly":43,"br":40,"ata":12.6,"cmp":4},
+{"d":"2026-06-06","s":"Fifth Settlement - 1st District","del":302,"dly":232,"br":209,"ata":22.3,"cmp":7},
+{"d":"2026-06-06","s":"First Settlement - El Banafseg","del":223,"dly":107,"br":108,"ata":15.7,"cmp":2},
+{"d":"2026-06-06","s":"Hadayek Al Ahram 2","del":316,"dly":34,"br":97,"ata":11,"cmp":6},
+{"d":"2026-06-06","s":"Marassi 2 - North Coast","del":95,"dly":19,"br":24,"ata":11.9,"cmp":0},
+{"d":"2026-06-06","s":"Mokattam 2","del":92,"dly":65,"br":83,"ata":20.5,"cmp":2},
+{"d":"2026-06-06","s":"Nasr City - 9th District","del":259,"dly":188,"br":182,"ata":20.3,"cmp":3},
+{"d":"2026-06-06","s":"New Cairo - One Golden SQ","del":212,"dly":176,"br":138,"ata":23.6,"cmp":4},
+{"d":"2026-06-06","s":"Sheikh Zayed","del":68,"dly":38,"br":30,"ata":16.2,"cmp":2},
+{"d":"2026-06-06","s":"Sherouk","del":17,"dly":5,"br":11,"ata":12.1,"cmp":1},
+{"d":"2026-06-06","s":"Zahraa Maadi","del":192,"dly":116,"br":92,"ata":16.3,"cmp":4},
+{"d":"2026-06-07","s":"6th of October","del":270,"dly":118,"br":114,"ata":14.9,"cmp":2},
+{"d":"2026-06-07","s":"Dokki","del":204,"dly":57,"br":60,"ata":13,"cmp":4},
+{"d":"2026-06-07","s":"Fifth Settlement - 1st District","del":281,"dly":217,"br":170,"ata":23.6,"cmp":10},
+{"d":"2026-06-07","s":"First Settlement - El Banafseg","del":257,"dly":137,"br":129,"ata":16.7,"cmp":3},
+{"d":"2026-06-07","s":"Hadayek Al Ahram 2","del":320,"dly":51,"br":97,"ata":11.1,"cmp":1},
+{"d":"2026-06-07","s":"Marassi 2 - North Coast","del":62,"dly":26,"br":31,"ata":14.6,"cmp":0},
+{"d":"2026-06-07","s":"Mokattam 2","del":88,"dly":46,"br":58,"ata":17.4,"cmp":3},
+{"d":"2026-06-07","s":"Nasr City - 9th District","del":261,"dly":223,"br":187,"ata":29.7,"cmp":17},
+{"d":"2026-06-07","s":"New Cairo - One Golden SQ","del":200,"dly":177,"br":155,"ata":36.3,"cmp":24},
+{"d":"2026-06-07","s":"Sheikh Zayed","del":73,"dly":30,"br":22,"ata":15.5,"cmp":1},
+{"d":"2026-06-07","s":"Sherouk","del":34,"dly":14,"br":22,"ata":14.3,"cmp":1},
+{"d":"2026-06-07","s":"Zahraa Maadi","del":183,"dly":108,"br":90,"ata":18,"cmp":5},
+{"d":"2026-06-08","s":"6th of October","del":233,"dly":89,"br":116,"ata":14.1,"cmp":0},
+{"d":"2026-06-08","s":"Dokki","del":163,"dly":37,"br":42,"ata":12.6,"cmp":3},
+{"d":"2026-06-08","s":"Fifth Settlement - 1st District","del":288,"dly":230,"br":206,"ata":25.5,"cmp":10},
+{"d":"2026-06-08","s":"First Settlement - El Banafseg","del":224,"dly":101,"br":97,"ata":15.6,"cmp":2},
+{"d":"2026-06-08","s":"Hadayek Al Ahram 2","del":282,"dly":40,"br":104,"ata":11.1,"cmp":5},
+{"d":"2026-06-08","s":"Marassi 2 - North Coast","del":69,"dly":17,"br":24,"ata":13.5,"cmp":0},
+{"d":"2026-06-08","s":"Mokattam 2","del":67,"dly":37,"br":50,"ata":16.6,"cmp":2},
+{"d":"2026-06-08","s":"Nasr City - 9th District","del":240,"dly":191,"br":173,"ata":19.9,"cmp":2},
+{"d":"2026-06-08","s":"New Cairo - One Golden SQ","del":212,"dly":190,"br":148,"ata":24.5,"cmp":8},
+{"d":"2026-06-08","s":"Sheikh Zayed","del":91,"dly":43,"br":28,"ata":14.1,"cmp":1},
+{"d":"2026-06-08","s":"Sherouk","del":42,"dly":14,"br":21,"ata":16.6,"cmp":2},
+{"d":"2026-06-08","s":"Zahraa Maadi","del":173,"dly":90,"br":75,"ata":15.7,"cmp":2},
+{"d":"2026-06-09","s":"6th of October","del":255,"dly":99,"br":121,"ata":14,"cmp":3},
+{"d":"2026-06-09","s":"Dokki","del":202,"dly":29,"br":39,"ata":11.7,"cmp":2},
+{"d":"2026-06-09","s":"Fifth Settlement - 1st District","del":302,"dly":244,"br":198,"ata":25.3,"cmp":6},
+{"d":"2026-06-09","s":"First Settlement - El Banafseg","del":238,"dly":113,"br":113,"ata":16.9,"cmp":3},
+{"d":"2026-06-09","s":"Hadayek Al Ahram 2","del":307,"dly":36,"br":102,"ata":10.8,"cmp":4},
+{"d":"2026-06-09","s":"Marassi 2 - North Coast","del":61,"dly":22,"br":26,"ata":13.8,"cmp":0},
+{"d":"2026-06-09","s":"Mokattam 2","del":99,"dly":47,"br":71,"ata":16.3,"cmp":2},
+{"d":"2026-06-09","s":"Nasr City - 9th District","del":232,"dly":159,"br":143,"ata":19.1,"cmp":4},
+{"d":"2026-06-09","s":"New Cairo - One Golden SQ","del":245,"dly":208,"br":173,"ata":24.2,"cmp":3},
+{"d":"2026-06-09","s":"Sheikh Zayed","del":90,"dly":48,"br":31,"ata":15.7,"cmp":1},
+{"d":"2026-06-09","s":"Sherouk","del":47,"dly":15,"br":24,"ata":13.9,"cmp":0},
+{"d":"2026-06-09","s":"Zahraa Maadi","del":220,"dly":147,"br":101,"ata":18.1,"cmp":4},
+{"d":"2026-06-10","s":"6th of October","del":243,"dly":76,"br":106,"ata":13.6,"cmp":2},
+{"d":"2026-06-10","s":"Dokki","del":169,"dly":37,"br":38,"ata":12.3,"cmp":1},
+{"d":"2026-06-10","s":"Fifth Settlement - 1st District","del":320,"dly":261,"br":194,"ata":22.2,"cmp":7},
+{"d":"2026-06-10","s":"First Settlement - El Banafseg","del":233,"dly":114,"br":95,"ata":16.8,"cmp":6},
+{"d":"2026-06-10","s":"Hadayek Al Ahram 2","del":291,"dly":60,"br":129,"ata":11.7,"cmp":2},
+{"d":"2026-06-10","s":"Marassi 2 - North Coast","del":74,"dly":19,"br":22,"ata":13.3,"cmp":0},
+{"d":"2026-06-10","s":"Mokattam 2","del":98,"dly":38,"br":54,"ata":15.3,"cmp":1},
+{"d":"2026-06-10","s":"Nasr City - 9th District","del":239,"dly":174,"br":172,"ata":20.1,"cmp":4},
+{"d":"2026-06-10","s":"New Cairo - One Golden SQ","del":212,"dly":198,"br":200,"ata":51.1,"cmp":27},
+{"d":"2026-06-10","s":"Sheikh Zayed","del":112,"dly":67,"br":45,"ata":15.8,"cmp":1},
+{"d":"2026-06-10","s":"Sherouk","del":48,"dly":14,"br":24,"ata":11.6,"cmp":0},
+{"d":"2026-06-10","s":"Zahraa Maadi","del":217,"dly":120,"br":92,"ata":16.1,"cmp":2},
+{"d":"2026-06-11","s":"6th of October","del":275,"dly":91,"br":119,"ata":13.4,"cmp":1},
+{"d":"2026-06-11","s":"Dokki","del":143,"dly":28,"br":28,"ata":12.1,"cmp":5},
+{"d":"2026-06-11","s":"Fifth Settlement - 1st District","del":286,"dly":208,"br":181,"ata":19.3,"cmp":3},
+{"d":"2026-06-11","s":"First Settlement - El Banafseg","del":250,"dly":133,"br":123,"ata":17,"cmp":2},
+{"d":"2026-06-11","s":"Hadayek Al Ahram 2","del":287,"dly":109,"br":124,"ata":16.9,"cmp":10},
+{"d":"2026-06-11","s":"Marassi 2 - North Coast","del":95,"dly":22,"br":29,"ata":12.6,"cmp":0},
+{"d":"2026-06-11","s":"Mokattam 2","del":108,"dly":51,"br":57,"ata":15.2,"cmp":1},
+{"d":"2026-06-11","s":"Nasr City - 9th District","del":253,"dly":194,"br":176,"ata":19.1,"cmp":2},
+{"d":"2026-06-11","s":"New Cairo - One Golden SQ","del":221,"dly":194,"br":155,"ata":28.8,"cmp":5},
+{"d":"2026-06-11","s":"Sheikh Zayed","del":71,"dly":43,"br":26,"ata":16.1,"cmp":1},
+{"d":"2026-06-11","s":"Sherouk","del":48,"dly":13,"br":18,"ata":12.8,"cmp":0},
+{"d":"2026-06-11","s":"Zahraa Maadi","del":188,"dly":109,"br":103,"ata":17.3,"cmp":2},
+{"d":"2026-06-12","s":"6th of October","del":283,"dly":114,"br":137,"ata":14.5,"cmp":5},
+{"d":"2026-06-12","s":"Dokki","del":170,"dly":27,"br":38,"ata":11.9,"cmp":0},
+{"d":"2026-06-12","s":"Fifth Settlement - 1st District","del":293,"dly":200,"br":196,"ata":19.1,"cmp":2},
+{"d":"2026-06-12","s":"First Settlement - El Banafseg","del":153,"dly":84,"br":78,"ata":17.5,"cmp":2},
+{"d":"2026-06-12","s":"Hadayek Al Ahram 2","del":331,"dly":60,"br":122,"ata":11.5,"cmp":12},
+{"d":"2026-06-12","s":"Marassi 2 - North Coast","del":130,"dly":53,"br":61,"ata":15.6,"cmp":4},
+{"d":"2026-06-12","s":"Mokattam 2","del":122,"dly":50,"br":82,"ata":14.4,"cmp":5},
+{"d":"2026-06-12","s":"Nasr City - 9th District","del":315,"dly":233,"br":228,"ata":19.9,"cmp":8},
+{"d":"2026-06-12","s":"New Cairo - One Golden SQ","del":223,"dly":187,"br":172,"ata":22,"cmp":4},
+{"d":"2026-06-12","s":"Sheikh Zayed","del":88,"dly":48,"br":36,"ata":15.9,"cmp":0},
+{"d":"2026-06-12","s":"Sheraton","del":39,"dly":32,"br":32,"ata":22.3,"cmp":2},
+{"d":"2026-06-12","s":"Sherouk","del":71,"dly":18,"br":24,"ata":12.1,"cmp":0},
+{"d":"2026-06-12","s":"Zahraa Maadi","del":210,"dly":138,"br":101,"ata":18.8,"cmp":4},
+{"d":"2026-06-13","s":"6th of October","del":286,"dly":91,"br":136,"ata":13.8,"cmp":7},
+{"d":"2026-06-13","s":"Dokki","del":144,"dly":20,"br":28,"ata":11.4,"cmp":5},
+{"d":"2026-06-13","s":"Fifth Settlement - 1st District","del":285,"dly":207,"br":184,"ata":23.3,"cmp":10},
+{"d":"2026-06-13","s":"First Settlement - El Banafseg","del":280,"dly":168,"br":156,"ata":19,"cmp":8},
+{"d":"2026-06-13","s":"Hadayek Al Ahram 2","del":330,"dly":73,"br":135,"ata":11.9,"cmp":2},
+{"d":"2026-06-13","s":"Marassi 2 - North Coast","del":105,"dly":26,"br":35,"ata":12.9,"cmp":0},
+{"d":"2026-06-13","s":"Mokattam 2","del":97,"dly":44,"br":55,"ata":15.7,"cmp":2},
+{"d":"2026-06-13","s":"Nasr City - 9th District","del":301,"dly":233,"br":204,"ata":21.5,"cmp":6},
+{"d":"2026-06-13","s":"New Cairo - One Golden SQ","del":224,"dly":197,"br":179,"ata":31.1,"cmp":10},
+{"d":"2026-06-13","s":"Sheikh Zayed","del":93,"dly":43,"br":32,"ata":15.5,"cmp":3},
+{"d":"2026-06-13","s":"Sheraton","del":47,"dly":36,"br":45,"ata":19.9,"cmp":1},
+{"d":"2026-06-13","s":"Sherouk","del":61,"dly":10,"br":21,"ata":12.5,"cmp":1},
+{"d":"2026-06-13","s":"Zahraa Maadi","del":194,"dly":119,"br":82,"ata":17.2,"cmp":4},
+{"d":"2026-06-14","s":"6th of October","del":226,"dly":67,"br":108,"ata":13.7,"cmp":3},
+{"d":"2026-06-14","s":"Dokki","del":171,"dly":31,"br":46,"ata":11.6,"cmp":1},
+{"d":"2026-06-14","s":"Fifth Settlement - 1st District","del":280,"dly":195,"br":150,"ata":18.8,"cmp":5},
+{"d":"2026-06-14","s":"First Settlement - El Banafseg","del":247,"dly":153,"br":131,"ata":18.6,"cmp":1},
+{"d":"2026-06-14","s":"Hadayek Al Ahram 2","del":274,"dly":34,"br":84,"ata":10.8,"cmp":4},
+{"d":"2026-06-14","s":"Marassi 2 - North Coast","del":93,"dly":28,"br":32,"ata":12.6,"cmp":0},
+{"d":"2026-06-14","s":"Mokattam 2","del":101,"dly":40,"br":37,"ata":14.7,"cmp":1},
+{"d":"2026-06-14","s":"Nasr City - 9th District","del":276,"dly":210,"br":195,"ata":21.7,"cmp":7},
+{"d":"2026-06-14","s":"New Cairo - One Golden SQ","del":238,"dly":216,"br":169,"ata":30.8,"cmp":14},
+{"d":"2026-06-14","s":"Sheikh Zayed","del":74,"dly":39,"br":28,"ata":16.1,"cmp":0},
+{"d":"2026-06-14","s":"Sheraton","del":62,"dly":43,"br":54,"ata":18.8,"cmp":2},
+{"d":"2026-06-14","s":"Sherouk","del":65,"dly":22,"br":26,"ata":13.2,"cmp":0},
+{"d":"2026-06-14","s":"Zahraa Maadi","del":165,"dly":109,"br":72,"ata":18.1,"cmp":2},
+{"d":"2026-06-15","s":"6th of October","del":232,"dly":85,"br":112,"ata":14.2,"cmp":3},
+{"d":"2026-06-15","s":"Dokki","del":192,"dly":39,"br":45,"ata":12,"cmp":3},
+{"d":"2026-06-15","s":"Fifth Settlement - 1st District","del":339,"dly":251,"br":207,"ata":20.9,"cmp":9},
+{"d":"2026-06-15","s":"First Settlement - El Banafseg","del":272,"dly":180,"br":157,"ata":22.5,"cmp":6},
+{"d":"2026-06-15","s":"Hadayek Al Ahram 2","del":276,"dly":30,"br":97,"ata":10.8,"cmp":1},
+{"d":"2026-06-15","s":"Marassi 2 - North Coast","del":89,"dly":19,"br":37,"ata":12.5,"cmp":0},
+{"d":"2026-06-15","s":"Mokattam 2","del":117,"dly":52,"br":54,"ata":16.8,"cmp":4},
+{"d":"2026-06-15","s":"Nasr City - 9th District","del":248,"dly":197,"br":165,"ata":21.2,"cmp":5},
+{"d":"2026-06-15","s":"New Cairo - One Golden SQ","del":260,"dly":225,"br":192,"ata":24.9,"cmp":6},
+{"d":"2026-06-15","s":"Sheikh Zayed","del":93,"dly":50,"br":33,"ata":15.7,"cmp":2},
+{"d":"2026-06-15","s":"Sheraton","del":116,"dly":77,"br":97,"ata":18.3,"cmp":4},
+{"d":"2026-06-15","s":"Sherouk","del":73,"dly":26,"br":32,"ata":14.1,"cmp":1},
+{"d":"2026-06-15","s":"Zahraa Maadi","del":229,"dly":142,"br":103,"ata":16.9,"cmp":3},
+{"d":"2026-06-16","s":"6th of October","del":282,"dly":92,"br":137,"ata":13.5,"cmp":2},
+{"d":"2026-06-16","s":"Dokki","del":144,"dly":27,"br":48,"ata":12.3,"cmp":2},
+{"d":"2026-06-16","s":"Fifth Settlement - 1st District","del":305,"dly":224,"br":182,"ata":22.5,"cmp":6},
+{"d":"2026-06-16","s":"First Settlement - El Banafseg","del":282,"dly":154,"br":140,"ata":16.2,"cmp":1},
+{"d":"2026-06-16","s":"Hadayek Al Ahram 2","del":321,"dly":48,"br":93,"ata":11.1,"cmp":3},
+{"d":"2026-06-16","s":"Marassi 2 - North Coast","del":103,"dly":33,"br":38,"ata":14.6,"cmp":0},
+{"d":"2026-06-16","s":"Mokattam 2","del":121,"dly":42,"br":51,"ata":14.3,"cmp":2},
+{"d":"2026-06-16","s":"Nasr City - 9th District","del":289,"dly":215,"br":185,"ata":20.6,"cmp":4},
+{"d":"2026-06-16","s":"New Cairo - One Golden SQ","del":289,"dly":271,"br":223,"ata":34.2,"cmp":16},
+{"d":"2026-06-16","s":"Sheikh Zayed","del":112,"dly":50,"br":32,"ata":15.4,"cmp":0},
+{"d":"2026-06-16","s":"Sheraton","del":92,"dly":61,"br":64,"ata":17.5,"cmp":1},
+{"d":"2026-06-16","s":"Sherouk","del":68,"dly":22,"br":29,"ata":13.7,"cmp":0},
+{"d":"2026-06-16","s":"Zahraa Maadi","del":206,"dly":112,"br":87,"ata":16.3,"cmp":1},
+{"d":"2026-06-17","s":"6th of October","del":260,"dly":82,"br":109,"ata":14.1,"cmp":2},
+{"d":"2026-06-17","s":"Dokki","del":206,"dly":46,"br":57,"ata":12.4,"cmp":2},
+{"d":"2026-06-17","s":"Fifth Settlement - 1st District","del":322,"dly":214,"br":166,"ata":19.7,"cmp":8},
+{"d":"2026-06-17","s":"First Settlement - El Banafseg","del":281,"dly":161,"br":136,"ata":17.1,"cmp":9},
+{"d":"2026-06-17","s":"Hadayek Al Ahram 2","del":308,"dly":50,"br":116,"ata":11.3,"cmp":6},
+{"d":"2026-06-17","s":"Marassi 2 - North Coast","del":150,"dly":66,"br":67,"ata":16.1,"cmp":2},
+{"d":"2026-06-17","s":"Mokattam 2","del":107,"dly":32,"br":47,"ata":12.9,"cmp":1},
+{"d":"2026-06-17","s":"Nasr City - 9th District","del":283,"dly":207,"br":203,"ata":19.7,"cmp":4},
+{"d":"2026-06-17","s":"New Cairo - One Golden SQ","del":237,"dly":201,"br":161,"ata":22.1,"cmp":4},
+{"d":"2026-06-17","s":"Sheikh Zayed","del":118,"dly":70,"br":43,"ata":16.6,"cmp":2},
+{"d":"2026-06-17","s":"Sheraton","del":103,"dly":63,"br":60,"ata":16.8,"cmp":2},
+{"d":"2026-06-17","s":"Sherouk","del":67,"dly":18,"br":20,"ata":12.5,"cmp":2},
+{"d":"2026-06-17","s":"Zahraa Maadi","del":197,"dly":101,"br":78,"ata":15.4,"cmp":3},
+{"d":"2026-06-18","s":"6th of October","del":349,"dly":100,"br":147,"ata":13.1,"cmp":5},
+{"d":"2026-06-18","s":"Dokki","del":176,"dly":25,"br":34,"ata":11.5,"cmp":3},
+{"d":"2026-06-18","s":"Fifth Settlement - 1st District","del":338,"dly":232,"br":191,"ata":21.2,"cmp":14},
+{"d":"2026-06-18","s":"First Settlement - El Banafseg","del":307,"dly":130,"br":141,"ata":14.9,"cmp":1},
+{"d":"2026-06-18","s":"Hadayek Al Ahram 2","del":380,"dly":76,"br":192,"ata":12,"cmp":3},
+{"d":"2026-06-18","s":"Marassi 2 - North Coast","del":230,"dly":119,"br":101,"ata":16.6,"cmp":6},
+{"d":"2026-06-18","s":"Mokattam 2","del":148,"dly":52,"br":41,"ata":14.3,"cmp":2},
+{"d":"2026-06-18","s":"Nasr City - 9th District","del":407,"dly":288,"br":239,"ata":19.9,"cmp":8},
+{"d":"2026-06-18","s":"New Cairo - One Golden SQ","del":251,"dly":206,"br":163,"ata":20.6,"cmp":0},
+{"d":"2026-06-18","s":"Sheikh Zayed","del":86,"dly":43,"br":23,"ata":15,"cmp":2},
+{"d":"2026-06-18","s":"Sheraton","del":118,"dly":76,"br":79,"ata":16.4,"cmp":4},
+{"d":"2026-06-18","s":"Sherouk","del":100,"dly":28,"br":23,"ata":12.7,"cmp":0},
+{"d":"2026-06-18","s":"Zahraa Maadi","del":253,"dly":173,"br":142,"ata":20.2,"cmp":5},
+{"d":"2026-06-19","s":"6th of October","del":296,"dly":77,"br":106,"ata":12.8,"cmp":5},
+{"d":"2026-06-19","s":"Dokki","del":157,"dly":19,"br":42,"ata":11.2,"cmp":1},
+{"d":"2026-06-19","s":"Fifth Settlement - 1st District","del":294,"dly":195,"br":175,"ata":20.9,"cmp":9},
+{"d":"2026-06-19","s":"First Settlement - El Banafseg","del":263,"dly":94,"br":105,"ata":14.4,"cmp":2},
+{"d":"2026-06-19","s":"Hadayek Al Ahram 2","del":336,"dly":84,"br":174,"ata":12.6,"cmp":2},
+{"d":"2026-06-19","s":"Marassi 2 - North Coast","del":270,"dly":111,"br":136,"ata":15.7,"cmp":2},
+{"d":"2026-06-19","s":"Mokattam 2","del":131,"dly":36,"br":48,"ata":13.7,"cmp":0},
+{"d":"2026-06-19","s":"Nasr City - 9th District","del":346,"dly":182,"br":125,"ata":16.7,"cmp":1},
+{"d":"2026-06-19","s":"New Cairo - One Golden SQ","del":240,"dly":198,"br":166,"ata":20.6,"cmp":3},
+{"d":"2026-06-19","s":"Sheikh Zayed","del":89,"dly":32,"br":22,"ata":14.2,"cmp":1},
+{"d":"2026-06-19","s":"Sheraton","del":95,"dly":63,"br":64,"ata":17.5,"cmp":2},
+{"d":"2026-06-19","s":"Sherouk","del":102,"dly":31,"br":25,"ata":13.1,"cmp":3},
+{"d":"2026-06-19","s":"Zahraa Maadi","del":214,"dly":113,"br":97,"ata":16.6,"cmp":3},
+{"d":"2026-06-20","s":"6th of October","del":266,"dly":59,"br":100,"ata":12.8,"cmp":5},
+{"d":"2026-06-20","s":"Dokki","del":167,"dly":24,"br":28,"ata":11.3,"cmp":3},
+{"d":"2026-06-20","s":"Fifth Settlement - 1st District","del":291,"dly":184,"br":149,"ata":17.6,"cmp":3},
+{"d":"2026-06-20","s":"First Settlement - El Banafseg","del":278,"dly":87,"br":84,"ata":13.8,"cmp":0},
+{"d":"2026-06-20","s":"Hadayek Al Ahram 2","del":366,"dly":102,"br":186,"ata":12.9,"cmp":1},
+{"d":"2026-06-20","s":"Marassi 2 - North Coast","del":190,"dly":43,"br":55,"ata":11.8,"cmp":1},
+{"d":"2026-06-20","s":"Mokattam 2","del":141,"dly":48,"br":47,"ata":14,"cmp":1},
+{"d":"2026-06-20","s":"Nasr City - 9th District","del":337,"dly":193,"br":108,"ata":18.1,"cmp":6},
+{"d":"2026-06-20","s":"New Cairo - One Golden SQ","del":240,"dly":188,"br":155,"ata":21.3,"cmp":3},
+{"d":"2026-06-20","s":"Sheikh Zayed","del":108,"dly":49,"br":35,"ata":15.1,"cmp":0},
+{"d":"2026-06-20","s":"Sheraton","del":109,"dly":54,"br":60,"ata":14.7,"cmp":4},
+{"d":"2026-06-20","s":"Sherouk","del":84,"dly":26,"br":33,"ata":13.8,"cmp":0},
+{"d":"2026-06-20","s":"Zahraa Maadi","del":222,"dly":105,"br":80,"ata":15.6,"cmp":2},
+{"d":"2026-06-21","s":"6th of October","del":268,"dly":81,"br":110,"ata":13.5,"cmp":3},
+{"d":"2026-06-21","s":"Dokki","del":163,"dly":38,"br":28,"ata":12.4,"cmp":1},
+{"d":"2026-06-21","s":"Fifth Settlement - 1st District","del":281,"dly":188,"br":156,"ata":23,"cmp":11},
+{"d":"2026-06-21","s":"First Settlement - El Banafseg","del":285,"dly":106,"br":101,"ata":14.2,"cmp":3},
+{"d":"2026-06-21","s":"Hadayek Al Ahram 2","del":361,"dly":86,"br":210,"ata":12.7,"cmp":1},
+{"d":"2026-06-21","s":"Marassi 2 - North Coast","del":132,"dly":40,"br":35,"ata":13.4,"cmp":0},
+{"d":"2026-06-21","s":"Mokattam 2","del":136,"dly":50,"br":46,"ata":15.1,"cmp":0},
+{"d":"2026-06-21","s":"Nasr City - 9th District","del":315,"dly":132,"br":95,"ata":15.6,"cmp":6},
+{"d":"2026-06-21","s":"New Cairo - One Golden SQ","del":275,"dly":220,"br":157,"ata":20.4,"cmp":4},
+{"d":"2026-06-21","s":"Sheikh Zayed","del":99,"dly":41,"br":33,"ata":14.1,"cmp":0},
+{"d":"2026-06-21","s":"Sheraton","del":141,"dly":74,"br":76,"ata":14.8,"cmp":2},
+{"d":"2026-06-21","s":"Sherouk","del":76,"dly":17,"br":28,"ata":12.9,"cmp":0},
+{"d":"2026-06-21","s":"Zahraa Maadi","del":234,"dly":135,"br":96,"ata":16.4,"cmp":4},
+{"d":"2026-06-22","s":"6th of October","del":270,"dly":66,"br":101,"ata":13.2,"cmp":4},
+{"d":"2026-06-22","s":"Dokki","del":178,"dly":36,"br":49,"ata":12.5,"cmp":3},
+{"d":"2026-06-22","s":"Fifth Settlement - 1st District","del":317,"dly":211,"br":189,"ata":21.3,"cmp":12},
+{"d":"2026-06-22","s":"First Settlement - El Banafseg","del":257,"dly":103,"br":87,"ata":15,"cmp":0},
+{"d":"2026-06-22","s":"Hadayek Al Ahram 2","del":309,"dly":83,"br":173,"ata":13.1,"cmp":3},
+{"d":"2026-06-22","s":"Marassi 2 - North Coast","del":127,"dly":33,"br":50,"ata":13.4,"cmp":3},
+{"d":"2026-06-22","s":"Mokattam 2","del":114,"dly":45,"br":45,"ata":14.8,"cmp":1},
+{"d":"2026-06-22","s":"Nasr City - 9th District","del":330,"dly":185,"br":122,"ata":17.7,"cmp":6},
+{"d":"2026-06-22","s":"New Cairo - One Golden SQ","del":277,"dly":227,"br":162,"ata":22.7,"cmp":0},
+{"d":"2026-06-22","s":"Sheikh Zayed","del":113,"dly":52,"br":40,"ata":14.8,"cmp":0},
+{"d":"2026-06-22","s":"Sheraton","del":113,"dly":64,"br":62,"ata":16.3,"cmp":3},
+{"d":"2026-06-22","s":"Sherouk","del":76,"dly":13,"br":24,"ata":12.1,"cmp":0},
+{"d":"2026-06-22","s":"Zahraa Maadi","del":222,"dly":138,"br":89,"ata":19.3,"cmp":3},
+{"d":"2026-06-23","s":"6th of October","del":266,"dly":84,"br":106,"ata":13.5,"cmp":3},
+{"d":"2026-06-23","s":"Dokki","del":205,"dly":31,"br":40,"ata":11.4,"cmp":2},
+{"d":"2026-06-23","s":"Fifth Settlement - 1st District","del":340,"dly":199,"br":165,"ata":17.3,"cmp":0},
+{"d":"2026-06-23","s":"First Settlement - El Banafseg","del":298,"dly":126,"br":107,"ata":14.7,"cmp":1},
+{"d":"2026-06-23","s":"Hadayek Al Ahram 2","del":377,"dly":82,"br":192,"ata":11.9,"cmp":2},
+{"d":"2026-06-23","s":"Marassi 2 - North Coast","del":119,"dly":29,"br":36,"ata":14.1,"cmp":1},
+{"d":"2026-06-23","s":"Mokattam 2","del":132,"dly":47,"br":52,"ata":13.8,"cmp":1},
+{"d":"2026-06-23","s":"Nasr City - 9th District","del":293,"dly":188,"br":144,"ata":21,"cmp":10},
+{"d":"2026-06-23","s":"New Cairo - One Golden SQ","del":294,"dly":240,"br":186,"ata":20.3,"cmp":5},
+{"d":"2026-06-23","s":"Sheikh Zayed","del":115,"dly":68,"br":53,"ata":18,"cmp":1},
+{"d":"2026-06-23","s":"Sheraton","del":125,"dly":65,"br":53,"ata":14.5,"cmp":0},
+{"d":"2026-06-23","s":"Sherouk","del":75,"dly":22,"br":33,"ata":13.2,"cmp":1},
+{"d":"2026-06-23","s":"Zahraa Maadi","del":197,"dly":112,"br":87,"ata":16.5,"cmp":3},
+{"d":"2026-06-24","s":"6th of October","del":295,"dly":100,"br":114,"ata":13.8,"cmp":1},
+{"d":"2026-06-24","s":"Dokki","del":202,"dly":42,"br":47,"ata":12,"cmp":2},
+{"d":"2026-06-24","s":"Fifth Settlement - 1st District","del":360,"dly":229,"br":163,"ata":17.5,"cmp":3},
+{"d":"2026-06-24","s":"First Settlement - El Banafseg","del":249,"dly":86,"br":90,"ata":13.6,"cmp":3},
+{"d":"2026-06-24","s":"Hadayek Al Ahram 2","del":306,"dly":25,"br":63,"ata":10.3,"cmp":5},
+{"d":"2026-06-24","s":"Marassi 2 - North Coast","del":162,"dly":54,"br":56,"ata":14.7,"cmp":3},
+{"d":"2026-06-24","s":"Mokattam 2","del":128,"dly":46,"br":44,"ata":14.2,"cmp":0},
+{"d":"2026-06-24","s":"Nasr City - 9th District","del":330,"dly":165,"br":109,"ata":16.8,"cmp":2},
+{"d":"2026-06-24","s":"New Cairo - One Golden SQ","del":272,"dly":197,"br":152,"ata":18.5,"cmp":1},
+{"d":"2026-06-24","s":"Sheikh Zayed","del":106,"dly":55,"br":31,"ata":15.4,"cmp":0},
+{"d":"2026-06-24","s":"Sheraton","del":111,"dly":53,"br":58,"ata":14.9,"cmp":3},
+{"d":"2026-06-24","s":"Sherouk","del":83,"dly":17,"br":23,"ata":11.9,"cmp":1},
+{"d":"2026-06-24","s":"Zahraa Maadi","del":246,"dly":135,"br":107,"ata":16.8,"cmp":1}];
+
+// ── VENDOR DATA ──
+const VD=[{"mo":"2026-05","v":"Full Speed Logistics","s":"Marassi 2 - North Coast","ord":15555,"br":7200,"br_pct":46.3,"avg_dt":214,"riders":18},
+{"mo":"2026-05","v":"Grabmates","s":"First Settlement - El Banafseg","ord":9893,"br":4875,"br_pct":49.3,"avg_dt":316,"riders":14},
+{"mo":"2026-05","v":"Grabmates","s":"Fifth Settlement - 1st District","ord":9113,"br":5109,"br_pct":56.1,"avg_dt":230,"riders":13},
+{"mo":"2026-05","v":"Grabmates","s":"6th of October","ord":7007,"br":1976,"br_pct":28.2,"avg_dt":103,"riders":12},
+{"mo":"2026-05","v":"Full Speed Logistics","s":"Dokki","ord":6465,"br":1515,"br_pct":23.4,"avg_dt":75,"riders":12},
+{"mo":"2026-05","v":"Grabmates","s":"Hadayek Al Ahram 2","ord":6331,"br":1170,"br_pct":18.5,"avg_dt":86,"riders":11},
+{"mo":"2026-05","v":"Full Speed Logistics","s":"Fifth Settlement - 1st District","ord":5985,"br":3555,"br_pct":59.4,"avg_dt":348,"riders":8},
+{"mo":"2026-05","v":"E-Speed","s":"Hadayek Al Ahram 2","ord":5670,"br":750,"br_pct":13.2,"avg_dt":85,"riders":8},
+{"mo":"2026-05","v":"Grabmates","s":"New Cairo - One Golden SQ","ord":5590,"br":4121,"br_pct":73.7,"avg_dt":480,"riders":12},
+{"mo":"2026-05","v":"Full Speed Logistics","s":"Zahraa Maadi","ord":4260,"br":2280,"br_pct":53.5,"avg_dt":147,"riders":6},
+{"mo":"2026-05","v":"Full Speed Logistics","s":"6th of October","ord":4125,"br":1455,"br_pct":35.3,"avg_dt":119,"riders":6},
+{"mo":"2026-05","v":"Grabmates","s":"Nasr City - 9th District","ord":3822,"br":1885,"br_pct":49.3,"avg_dt":113,"riders":9},
+{"mo":"2026-05","v":"Speedo","s":"6th of October","ord":3710,"br":770,"br_pct":20.8,"avg_dt":104,"riders":6},
+{"mo":"2026-05","v":"OFD Express","s":"Hadayek Al Ahram 2","ord":3696,"br":468,"br_pct":12.7,"avg_dt":75,"riders":7},
+{"mo":"2026-05","v":"Speedo","s":"Nasr City - 9th District","ord":3654,"br":2002,"br_pct":54.8,"avg_dt":113,"riders":8},
+{"mo":"2026-05","v":"Full Speed Logistics","s":"Nasr City - 9th District","ord":2895,"br":870,"br_pct":30.1,"avg_dt":98,"riders":6},
+{"mo":"2026-05","v":"Grabmates","s":"Zahraa Maadi","ord":2860,"br":1170,"br_pct":40.9,"avg_dt":174,"riders":4},
+{"mo":"2026-05","v":"OFD Express","s":"Zahraa Maadi","ord":2640,"br":1176,"br_pct":44.5,"avg_dt":160,"riders":4},
+{"mo":"2026-05","v":"Egypt","s":"Dokki","ord":2613,"br":351,"br_pct":13.4,"avg_dt":69,"riders":7},
+{"mo":"2026-05","v":"Egypt","s":"Hadayek Al Ahram 2","ord":2353,"br":299,"br_pct":12.7,"avg_dt":84,"riders":4},
+{"mo":"2026-05","v":"E-Speed","s":"Nasr City - 9th District","ord":1980,"br":1305,"br_pct":65.9,"avg_dt":136,"riders":3},
+{"mo":"2026-05","v":"E-Speed","s":"First Settlement - El Banafseg","ord":1920,"br":660,"br_pct":34.4,"avg_dt":228,"riders":3},
+{"mo":"2026-05","v":"Speedo","s":"New Cairo - One Golden SQ","ord":1862,"br":1358,"br_pct":72.9,"avg_dt":387,"riders":6},
+{"mo":"2026-05","v":"OFD Express","s":"Nasr City - 9th District","ord":1680,"br":984,"br_pct":58.6,"avg_dt":114,"riders":5},
+{"mo":"2026-05","v":"Speedo","s":"First Settlement - El Banafseg","ord":1526,"br":616,"br_pct":40.4,"avg_dt":175,"riders":2},
+{"mo":"2026-05","v":"True Express","s":"Dokki","ord":1416,"br":300,"br_pct":21.2,"avg_dt":81,"riders":3},
+{"mo":"2026-05","v":"Full Speed Logistics","s":"New Cairo - One Golden SQ","ord":1380,"br":945,"br_pct":68.5,"avg_dt":394,"riders":2},
+{"mo":"2026-05","v":"Egypt","s":"6th of October","ord":1235,"br":533,"br_pct":43.2,"avg_dt":103,"riders":3},
+{"mo":"2026-05","v":"Grabmates","s":"Sheikh Zayed","ord":1183,"br":195,"br_pct":16.5,"avg_dt":27,"riders":8},
+{"mo":"2026-05","v":"Egypt","s":"First Settlement - El Banafseg","ord":1170,"br":169,"br_pct":14.4,"avg_dt":207,"riders":1},
+{"mo":"2026-05","v":"Full Speed Logistics","s":"Hadayek Al Ahram 2","ord":1065,"br":225,"br_pct":21.1,"avg_dt":84,"riders":2},
+{"mo":"2026-05","v":"E-Speed","s":"New Cairo - One Golden SQ","ord":1050,"br":795,"br_pct":75.7,"avg_dt":514,"riders":2},
+{"mo":"2026-05","v":"Speedo","s":"Sheikh Zayed","ord":868,"br":252,"br_pct":29,"avg_dt":42,"riders":5},
+{"mo":"2026-05","v":"Egypt","s":"Zahraa Maadi","ord":806,"br":208,"br_pct":25.8,"avg_dt":151,"riders":1},
+{"mo":"2026-05","v":"Egypt","s":"Fifth Settlement - 1st District","ord":754,"br":546,"br_pct":72.4,"avg_dt":431,"riders":2},
+{"mo":"2026-05","v":"Speedo","s":"Hadayek Al Ahram 2","ord":686,"br":168,"br_pct":24.5,"avg_dt":83,"riders":1},
+{"mo":"2026-05","v":"E-Speed","s":"Fifth Settlement - 1st District","ord":630,"br":390,"br_pct":61.9,"avg_dt":473,"riders":1},
+{"mo":"2026-05","v":"E-Speed","s":"Sheikh Zayed","ord":615,"br":180,"br_pct":29.3,"avg_dt":30,"riders":4},
+{"mo":"2026-05","v":"Full Speed Logistics","s":"Sheikh Zayed","ord":225,"br":90,"br_pct":40,"avg_dt":36,"riders":2},
+{"mo":"2026-06","v":"Grabmates","s":"Fifth Settlement - 1st District","ord":53729,"br":26091,"br_pct":48.6,"avg_dt":244,"riders":24},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"Marassi 2 - North Coast","ord":42750,"br":13215,"br_pct":30.9,"avg_dt":85,"riders":21},
+{"mo":"2026-06","v":"Grabmates","s":"6th of October","ord":42146,"br":14391,"br_pct":34.1,"avg_dt":153,"riders":13},
+{"mo":"2026-06","v":"Grabmates","s":"First Settlement - El Banafseg","ord":39494,"br":14248,"br_pct":36.1,"avg_dt":152,"riders":20},
+{"mo":"2026-06","v":"Grabmates","s":"Hadayek Al Ahram 2","ord":35815,"br":11479,"br_pct":32.1,"avg_dt":111,"riders":11},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"Dokki","ord":32745,"br":6180,"br_pct":18.9,"avg_dt":90,"riders":13},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"Zahraa Maadi","ord":29565,"br":13470,"br_pct":45.6,"avg_dt":215,"riders":8},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"Fifth Settlement - 1st District","ord":27135,"br":12735,"br_pct":46.9,"avg_dt":217,"riders":10},
+{"mo":"2026-06","v":"Grabmates","s":"New Cairo - One Golden SQ","ord":26806,"br":16185,"br_pct":60.4,"avg_dt":266,"riders":17},
+{"mo":"2026-06","v":"E-Speed","s":"Hadayek Al Ahram 2","ord":23940,"br":6270,"br_pct":26.2,"avg_dt":114,"riders":9},
+{"mo":"2026-06","v":"OFD Express","s":"Hadayek Al Ahram 2","ord":22980,"br":4392,"br_pct":19.1,"avg_dt":110,"riders":7},
+{"mo":"2026-06","v":"El Ezz","s":"New Cairo - One Golden SQ","ord":22872,"br":12840,"br_pct":56.1,"avg_dt":253,"riders":20},
+{"mo":"2026-06","v":"Grabmates","s":"Nasr City - 9th District","ord":22841,"br":10114,"br_pct":44.3,"avg_dt":160,"riders":12},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"6th of October","ord":22515,"br":8445,"br_pct":37.5,"avg_dt":144,"riders":9},
+{"mo":"2026-06","v":"Egypt","s":"Dokki","ord":19240,"br":2886,"br_pct":15,"avg_dt":87,"riders":8},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"Nasr City - 9th District","ord":18675,"br":6315,"br_pct":33.8,"avg_dt":184,"riders":7},
+{"mo":"2026-06","v":"Speedo","s":"Nasr City - 9th District","ord":18620,"br":8302,"br_pct":44.6,"avg_dt":158,"riders":8},
+{"mo":"2026-06","v":"Speedo","s":"6th of October","ord":16002,"br":6244,"br_pct":39,"avg_dt":143,"riders":6},
+{"mo":"2026-06","v":"Grabmates","s":"Zahraa Maadi","ord":14690,"br":5343,"br_pct":36.4,"avg_dt":174,"riders":5},
+{"mo":"2026-06","v":"E-Speed","s":"First Settlement - El Banafseg","ord":14670,"br":5490,"br_pct":37.4,"avg_dt":184,"riders":8},
+{"mo":"2026-06","v":"Grabmates","s":"Sheikh Zayed","ord":13260,"br":2639,"br_pct":19.9,"avg_dt":73,"riders":12},
+{"mo":"2026-06","v":"OFD Express","s":"Nasr City - 9th District","ord":12816,"br":6816,"br_pct":53.2,"avg_dt":190,"riders":5},
+{"mo":"2026-06","v":"Egypt","s":"Hadayek Al Ahram 2","ord":12727,"br":3549,"br_pct":27.9,"avg_dt":117,"riders":4},
+{"mo":"2026-06","v":"E-Speed","s":"Nasr City - 9th District","ord":11025,"br":5010,"br_pct":45.4,"avg_dt":207,"riders":3},
+{"mo":"2026-06","v":"Egypt","s":"Fifth Settlement - 1st District","ord":10582,"br":5278,"br_pct":49.9,"avg_dt":283,"riders":4},
+{"mo":"2026-06","v":"OFD Express","s":"Zahraa Maadi","ord":9996,"br":3552,"br_pct":35.5,"avg_dt":184,"riders":6},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"First Settlement - El Banafseg","ord":9465,"br":4200,"br_pct":44.4,"avg_dt":163,"riders":7},
+{"mo":"2026-06","v":"OFD Express","s":"New Cairo - One Golden SQ","ord":9456,"br":6720,"br_pct":71.1,"avg_dt":293,"riders":5},
+{"mo":"2026-06","v":"El Ezz","s":"Sheraton","ord":9180,"br":5220,"br_pct":56.9,"avg_dt":96,"riders":12},
+{"mo":"2026-06","v":"Egypt","s":"First Settlement - El Banafseg","ord":9139,"br":2275,"br_pct":24.9,"avg_dt":139,"riders":4},
+{"mo":"2026-06","v":"El Ezz","s":"Mokattam 2","ord":8868,"br":3672,"br_pct":41.4,"avg_dt":70,"riders":9},
+{"mo":"2026-06","v":"Egypt","s":"Mokattam 2","ord":8398,"br":3081,"br_pct":36.7,"avg_dt":106,"riders":6},
+{"mo":"2026-06","v":"Egypt","s":"6th of October","ord":7852,"br":4537,"br_pct":57.8,"avg_dt":151,"riders":4},
+{"mo":"2026-06","v":"True Express","s":"Dokki","ord":7260,"br":792,"br_pct":10.9,"avg_dt":90,"riders":3},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"Mokattam 2","ord":7140,"br":3510,"br_pct":49.2,"avg_dt":113,"riders":4},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"Sheraton","ord":7125,"br":4500,"br_pct":63.2,"avg_dt":101,"riders":7},
+{"mo":"2026-06","v":"El Ezz","s":"Zahraa Maadi","ord":6960,"br":2244,"br_pct":32.2,"avg_dt":173,"riders":3},
+{"mo":"2026-06","v":"Speedo","s":"Sheikh Zayed","ord":6874,"br":2184,"br_pct":31.8,"avg_dt":109,"riders":5},
+{"mo":"2026-06","v":"Egypt","s":"Zahraa Maadi","ord":6539,"br":2600,"br_pct":39.8,"avg_dt":107,"riders":3},
+{"mo":"2026-06","v":"El Ezz","s":"First Settlement - El Banafseg","ord":6432,"br":3084,"br_pct":47.9,"avg_dt":185,"riders":4},
+{"mo":"2026-06","v":"El Ezz","s":"Sherouk","ord":6312,"br":2040,"br_pct":32.3,"avg_dt":64,"riders":10},
+{"mo":"2026-06","v":"E-Speed","s":"Sheikh Zayed","ord":5520,"br":1875,"br_pct":34,"avg_dt":87,"riders":5},
+{"mo":"2026-06","v":"Grabmates","s":"Mokattam 2","ord":5447,"br":2951,"br_pct":54.2,"avg_dt":113,"riders":3},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"New Cairo - One Golden SQ","ord":5370,"br":3840,"br_pct":71.5,"avg_dt":245,"riders":5},
+{"mo":"2026-06","v":"Speedo","s":"First Settlement - El Banafseg","ord":5208,"br":1932,"br_pct":37.1,"avg_dt":122,"riders":3},
+{"mo":"2026-06","v":"Speedo","s":"Fifth Settlement - 1st District","ord":4452,"br":1414,"br_pct":31.8,"avg_dt":191,"riders":3},
+{"mo":"2026-06","v":"E-Speed","s":"New Cairo - One Golden SQ","ord":4425,"br":2115,"br_pct":47.8,"avg_dt":261,"riders":1},
+{"mo":"2026-06","v":"Grabmates","s":"Sherouk","ord":4199,"br":871,"br_pct":20.7,"avg_dt":49,"riders":7},
+{"mo":"2026-06","v":"OFD Express","s":"Sheikh Zayed","ord":4008,"br":1080,"br_pct":26.9,"avg_dt":59,"riders":5},
+{"mo":"2026-06","v":"Full Speed Logistics","s":"Hadayek Al Ahram 2","ord":3885,"br":1275,"br_pct":32.8,"avg_dt":112,"riders":1}];
+
+// ── YTD SUMMARY ──
+const YTD=[{"s":"Fifth Settlement - 1st District","ytd":20177,"first":"2026-04-11","days":75},{"s":"First Settlement - El Banafseg","ytd":16526,"first":"2026-04-04","days":81},{"s":"Hadayek Al Ahram 2","ytd":15276,"first":"2026-04-29","days":57},{"s":"6th of October","ytd":13352,"first":"2026-04-24","days":62},{"s":"Dokki","ytd":11921,"first":"2026-04-15","days":71},{"s":"New Cairo - One Golden SQ","ytd":11626,"first":"2026-04-22","days":63},{"s":"Nasr City - 9th District","ytd":10711,"first":"2026-05-14","days":42},{"s":"Zahraa Maadi","ytd":5879,"first":"2026-05-23","days":33},{"s":"Marassi 2 - North Coast","ytd":3842,"first":"2026-05-25","days":31},{"s":"Sheikh Zayed","ytd":2964,"first":"2026-05-18","days":38},{"s":"Mokattam 2","ytd":2191,"first":"2026-06-05","days":20},{"s":"Sheraton","ytd":1271,"first":"2026-06-12","days":13},{"s":"Sherouk","ytd":1239,"first":"2026-06-05","days":20}];
+
+// ── CPO SHEET DATA (CPO_Egypt Jun 2026) ──
+const CPOD=[{"date":"2026-06-01","ym":"2026-06","riderCut":134465.0,"totalOrders":2005,"totalCost":154634.75,"cpo":77.1,"cpoExcl":67.1},{"date":"2026-06-02","ym":"2026-06","riderCut":146780.0,"totalOrders":2029,"totalCost":168797.0,"cpo":83.2,"cpoExcl":72.3},{"date":"2026-06-03","ym":"2026-06","riderCut":157015.0,"totalOrders":1989,"totalCost":180567.25,"cpo":90.8,"cpoExcl":78.9},{"date":"2026-06-04","ym":"2026-06","riderCut":153965.0,"totalOrders":1997,"totalCost":177059.75,"cpo":88.7,"cpoExcl":77.1},{"date":"2026-06-05","ym":"2026-06","riderCut":205505.0,"totalOrders":2555,"totalCost":236330.75,"cpo":92.5,"cpoExcl":80.4},{"date":"2026-06-06","ym":"2026-06","riderCut":181505.0,"totalOrders":2255,"totalCost":208730.75,"cpo":92.6,"cpoExcl":80.5},{"date":"2026-06-07","ym":"2026-06","riderCut":169695.0,"totalOrders":2224,"totalCost":195149.25,"cpo":87.7,"cpoExcl":76.3},{"date":"2026-06-08","ym":"2026-06","riderCut":176690.0,"totalOrders":2086,"totalCost":203193.5,"cpo":97.4,"cpoExcl":84.7},{"date":"2026-06-09","ym":"2026-06","riderCut":180725.0,"totalOrders":2296,"totalCost":207833.75,"cpo":90.5,"cpoExcl":78.7},{"date":"2026-06-10","ym":"2026-06","riderCut":171565.0,"totalOrders":2255,"totalCost":197299.75,"cpo":87.5,"cpoExcl":76.1},{"date":"2026-06-11","ym":"2026-06","riderCut":178305.0,"totalOrders":2222,"totalCost":205050.75,"cpo":92.3,"cpoExcl":80.2},{"date":"2026-06-12","ym":"2026-06","riderCut":202685.0,"totalOrders":2428,"totalCost":233087.75,"cpo":96.0,"cpoExcl":83.5},{"date":"2026-06-13","ym":"2026-06","riderCut":193650.0,"totalOrders":2438,"totalCost":222697.5,"cpo":91.3,"cpoExcl":79.4},{"date":"2026-06-14","ym":"2026-06","riderCut":190180.0,"totalOrders":2280,"totalCost":218707.0,"cpo":95.9,"cpoExcl":83.4},{"date":"2026-06-15","ym":"2026-06","riderCut":208035.0,"totalOrders":2548,"totalCost":239240.25,"cpo":93.9,"cpoExcl":81.6},{"date":"2026-06-16","ym":"2026-06","riderCut":207330.0,"totalOrders":2618,"totalCost":238429.5,"cpo":91.1,"cpoExcl":79.2},{"date":"2026-06-17","ym":"2026-06","riderCut":212400.0,"totalOrders":2632,"totalCost":244260.0,"cpo":92.8,"cpoExcl":80.7},{"date":"2026-06-18","ym":"2026-06","riderCut":215525.0,"totalOrders":3149,"totalCost":247853.75,"cpo":78.7,"cpoExcl":68.4},{"date":"2026-06-19","ym":"2026-06","riderCut":201495.0,"totalOrders":2821,"totalCost":231719.25,"cpo":82.1,"cpoExcl":71.4},{"date":"2026-06-20","ym":"2026-06","riderCut":206910.0,"totalOrders":2817,"totalCost":237946.5,"cpo":84.5,"cpoExcl":73.5},{"date":"2026-06-21","ym":"2026-06","riderCut":217000.0,"totalOrders":2778,"totalCost":249550.0,"cpo":89.8,"cpoExcl":78.1},{"date":"2026-06-22","ym":"2026-06","riderCut":209805.0,"totalOrders":2692,"totalCost":241275.75,"cpo":89.6,"cpoExcl":77.9},{"date":"2026-06-23","ym":"2026-06","riderCut":233725.0,"totalOrders":2878,"totalCost":268783.75,"cpo":93.4,"cpoExcl":81.2},{"date":"2026-06-24","ym":"2026-06","riderCut":220070.0,"totalOrders":2819,"totalCost":253080.5,"cpo":89.8,"cpoExcl":78.1}];
+const JUN_MTD={"riderCut":4575025.0,"vendorCut":686254.0,"totalOrders":58811,"totalCost":5261279.0,"cpo":89.5,"cpoExcl":77.8};
+const MAY_MTD={"riderCut":3902150,"vendorCut":587275,"totalOrders":46143,"totalCost":4489425,"cpo":97.3,"cpoExcl":84.6};
+const STORE_CPO={"Zahraa Maadi":78.2,"First Settlement - El Banafseg":84.2,"Nasr City - 9th District":85.4,"Marassi 2 - North Coast":138.0,"New Cairo - One Golden SQ":82.8,"6th of October":76.5,"Sheikh Zayed":145.1,"Dokki":98.7,"Hadayek Al Ahram 2":78.4,"Fifth Settlement - 1st District":74.2,"Sherouk":143.7,"Mokattam 2":122.2};
+
+const UTIL_MO=[{"mo":"2026-05","s":"Hadayek Al Ahram 2","days":4,"riders":28.5,"opr":494.9,"del_min":89.9,"dist_km":20.82,"vol":16826,"breach_pct":16.2},{"mo":"2026-05","s":"Fifth Settlement - 1st District","days":4,"riders":20.3,"opr":550.8,"del_min":272.5,"dist_km":43.91,"vol":14322,"breach_pct":57.0},{"mo":"2026-05","s":"Marassi 2 - North Coast","days":4,"riders":14.3,"opr":841.9,"del_min":233.0,"dist_km":61.78,"vol":13470,"breach_pct":43.9},{"mo":"2026-05","s":"Nasr City - 9th District","days":4,"riders":28.4,"opr":383.9,"del_min":127.8,"dist_km":36.34,"vol":13435,"breach_pct":48.8},{"mo":"2026-05","s":"6th of October","days":4,"riders":22.6,"opr":494.9,"del_min":111.3,"dist_km":35.03,"vol":13362,"breach_pct":29.2},{"mo":"2026-05","s":"First Settlement - El Banafseg","days":4,"riders":17.1,"opr":568.9,"del_min":269.6,"dist_km":46.86,"vol":12515,"breach_pct":43.4},{"mo":"2026-05","s":"New Cairo - One Golden SQ","days":4,"riders":13.0,"opr":411.0,"del_min":480.9,"dist_km":62.1,"vol":9043,"breach_pct":75.0},{"mo":"2026-05","s":"Zahraa Maadi","days":4,"riders":14.0,"opr":599.9,"del_min":172.5,"dist_km":38.9,"vol":8998,"breach_pct":43.6},{"mo":"2026-05","s":"Dokki","days":4,"riders":20.6,"opr":365.3,"del_min":69.3,"dist_km":18.54,"vol":8403,"breach_pct":18.6},{"mo":"2026-05","s":"Sheikh Zayed","days":4,"riders":19.8,"opr":121.6,"del_min":32.7,"dist_km":10.28,"vol":2796,"breach_pct":25.1},{"mo":"2026-06","s":"Hadayek Al Ahram 2","days":26,"riders":27.2,"opr":2995.5,"del_min":111.6,"dist_km":21.88,"vol":110833,"breach_pct":27.0},{"mo":"2026-06","s":"Fifth Settlement - 1st District","days":26,"riders":25.2,"opr":2017.6,"del_min":236.1,"dist_km":44.77,"vol":108949,"breach_pct":47.1},{"mo":"2026-06","s":"Nasr City - 9th District","days":26,"riders":27.0,"opr":2161.7,"del_min":180.9,"dist_km":44.88,"vol":101602,"breach_pct":43.7},{"mo":"2026-06","s":"6th of October","days":26,"riders":22.9,"opr":2374.3,"del_min":147.7,"dist_km":40.68,"vol":97346,"breach_pct":38.2},{"mo":"2026-06","s":"First Settlement - El Banafseg","days":26,"riders":24.6,"opr":1784.1,"del_min":153.3,"dist_km":37.59,"vol":90988,"breach_pct":36.5},{"mo":"2026-06","s":"New Cairo - One Golden SQ","days":26,"riders":22.2,"opr":1493.1,"del_min":256.4,"dist_km":49.76,"vol":79134,"breach_pct":58.6},{"mo":"2026-06","s":"Zahraa Maadi","days":26,"riders":17.3,"opr":2668.7,"del_min":181.3,"dist_km":39.16,"vol":72056,"breach_pct":39.4},{"mo":"2026-06","s":"Dokki","days":26,"riders":19.6,"opr":2502.9,"del_min":89.2,"dist_km":23.49,"vol":65075,"breach_pct":16.2},{"mo":"2026-06","s":"Marassi 2 - North Coast","days":26,"riders":17.1,"opr":2110.3,"del_min":88.6,"dist_km":28.47,"vol":48537,"breach_pct":31.8},{"mo":"2026-06","s":"Sheikh Zayed","days":26,"riders":16.3,"opr":1109.3,"del_min":80.9,"dist_km":24.2,"vol":33280,"breach_pct":27.6},{"mo":"2026-06","s":"Mokattam 2","days":22,"riders":15.3,"opr":1301.8,"del_min":95.5,"dist_km":23.23,"vol":32546,"breach_pct":42.8},{"mo":"2026-06","s":"Sheraton","days":15,"riders":14.9,"opr":860.7,"del_min":98.5,"dist_km":31.37,"vol":19796,"breach_pct":58.1},{"mo":"2026-06","s":"Sherouk","days":22,"riders":12.0,"opr":806.7,"del_min":62.7,"dist_km":17.64,"vol":18553,"breach_pct":26.7}];
+const UTIL_DAY=[{"d":"2026-05-28","s":"6th of October","riders":18,"vol":2693,"opr":149.6,"del_min":114.2,"dist_km":36.26,"breach_pct":23.7},{"d":"2026-05-28","s":"Dokki","riders":18,"vol":2068,"opr":114.9,"del_min":77.9,"dist_km":20.19,"breach_pct":18.0},{"d":"2026-05-28","s":"Fifth Settlement - 1st District","riders":19,"vol":3001,"opr":157.9,"del_min":191.5,"dist_km":40.79,"breach_pct":49.0},{"d":"2026-05-28","s":"First Settlement - El Banafseg","riders":15,"vol":2775,"opr":185.0,"del_min":213.1,"dist_km":47.92,"breach_pct":29.8},{"d":"2026-05-28","s":"Hadayek Al Ahram 2","riders":30,"vol":3902,"opr":130.1,"del_min":72.8,"dist_km":17.18,"breach_pct":12.6},{"d":"2026-05-28","s":"Marassi 2 - North Coast","riders":14,"vol":3600,"opr":257.1,"del_min":272.4,"dist_km":70.48,"breach_pct":50.8},{"d":"2026-05-28","s":"Nasr City - 9th District","riders":27,"vol":3180,"opr":117.8,"del_min":119.7,"dist_km":37.59,"breach_pct":47.5},{"d":"2026-05-28","s":"New Cairo - One Golden SQ","riders":13,"vol":2214,"opr":170.3,"del_min":272.4,"dist_km":59.06,"breach_pct":55.4},{"d":"2026-05-28","s":"Sheikh Zayed","riders":19,"vol":605,"opr":31.8,"del_min":26.8,"dist_km":9.55,"breach_pct":12.7},{"d":"2026-05-28","s":"Zahraa Maadi","riders":15,"vol":1831,"opr":122.1,"del_min":111.3,"dist_km":29.61,"breach_pct":43.9},{"d":"2026-05-29","s":"6th of October","riders":24,"vol":3231,"opr":134.6,"del_min":94.7,"dist_km":30.62,"breach_pct":28.6},{"d":"2026-05-29","s":"Dokki","riders":22,"vol":1830,"opr":83.2,"del_min":56.2,"dist_km":15.68,"breach_pct":19.5},{"d":"2026-05-29","s":"Fifth Settlement - 1st District","riders":20,"vol":3677,"opr":183.8,"del_min":322.6,"dist_km":45.81,"breach_pct":60.5},{"d":"2026-05-29","s":"First Settlement - El Banafseg","riders":14,"vol":2950,"opr":210.7,"del_min":294.2,"dist_km":51.04,"breach_pct":41.6},{"d":"2026-05-29","s":"Hadayek Al Ahram 2","riders":27,"vol":4313,"opr":159.7,"del_min":98.5,"dist_km":24.18,"breach_pct":14.5},{"d":"2026-05-29","s":"Marassi 2 - North Coast","riders":15,"vol":3915,"opr":261.0,"del_min":290.7,"dist_km":67.66,"breach_pct":49.0},{"d":"2026-05-29","s":"Nasr City - 9th District","riders":26,"vol":3066,"opr":117.9,"del_min":121.5,"dist_km":33.67,"breach_pct":47.8},{"d":"2026-05-29","s":"New Cairo - One Golden SQ","riders":14,"vol":2304,"opr":164.6,"del_min":488.4,"dist_km":57.79,"breach_pct":86.2},{"d":"2026-05-29","s":"Sheikh Zayed","riders":21,"vol":539,"opr":25.7,"del_min":23.0,"dist_km":6.55,"breach_pct":16.9},{"d":"2026-05-29","s":"Zahraa Maadi","riders":15,"vol":1877,"opr":125.1,"del_min":107.5,"dist_km":26.36,"breach_pct":43.8},{"d":"2026-05-30","s":"6th of October","riders":25,"vol":3719,"opr":148.8,"del_min":110.5,"dist_km":33.65,"breach_pct":31.0},{"d":"2026-05-30","s":"Dokki","riders":22,"vol":2068,"opr":94.0,"del_min":62.6,"dist_km":16.73,"breach_pct":17.8},{"d":"2026-05-30","s":"Fifth Settlement - 1st District","riders":20,"vol":3567,"opr":178.3,"del_min":266.9,"dist_km":43.91,"breach_pct":61.4},{"d":"2026-05-30","s":"First Settlement - El Banafseg","riders":19,"vol":3379,"opr":177.8,"del_min":271.9,"dist_km":44.12,"breach_pct":50.3},{"d":"2026-05-30","s":"Hadayek Al Ahram 2","riders":31,"vol":4159,"opr":134.2,"del_min":82.3,"dist_km":18.44,"breach_pct":19.4},{"d":"2026-05-30","s":"Marassi 2 - North Coast","riders":15,"vol":4020,"opr":268.0,"del_min":254.8,"dist_km":70.78,"breach_pct":42.9},{"d":"2026-05-30","s":"Nasr City - 9th District","riders":34,"vol":3884,"opr":114.2,"del_min":118.6,"dist_km":34.66,"breach_pct":51.3},{"d":"2026-05-30","s":"New Cairo - One Golden SQ","riders":10,"vol":1671,"opr":167.1,"del_min":707.7,"dist_km":60.34,"breach_pct":91.3},{"d":"2026-05-30","s":"Sheikh Zayed","riders":21,"vol":1005,"opr":47.9,"del_min":48.7,"dist_km":14.69,"breach_pct":36.1},{"d":"2026-05-30","s":"Zahraa Maadi","riders":14,"vol":2836,"opr":202.6,"del_min":219.7,"dist_km":48.26,"breach_pct":45.2},{"d":"2026-05-31","s":"6th of October","riders":22,"vol":3719,"opr":169.0,"del_min":127.6,"dist_km":40.37,"breach_pct":31.7},{"d":"2026-05-31","s":"Dokki","riders":20,"vol":2437,"opr":121.8,"del_min":83.4,"dist_km":22.19,"breach_pct":19.2},{"d":"2026-05-31","s":"Fifth Settlement - 1st District","riders":22,"vol":4077,"opr":185.3,"del_min":301.5,"dist_km":44.86,"breach_pct":55.9},{"d":"2026-05-31","s":"First Settlement - El Banafseg","riders":19,"vol":3411,"opr":179.5,"del_min":293.5,"dist_km":45.74,"breach_pct":49.3},{"d":"2026-05-31","s":"Hadayek Al Ahram 2","riders":25,"vol":4452,"opr":178.1,"del_min":110.9,"dist_km":24.53,"breach_pct":17.8},{"d":"2026-05-31","s":"Marassi 2 - North Coast","riders":13,"vol":1935,"opr":148.8,"del_min":98.9,"dist_km":35.22,"breach_pct":22.5},{"d":"2026-05-31","s":"Nasr City - 9th District","riders":25,"vol":3305,"opr":132.2,"del_min":155.2,"dist_km":40.1,"breach_pct":48.0},{"d":"2026-05-31","s":"New Cairo - One Golden SQ","riders":14,"vol":2854,"opr":203.9,"del_min":505.9,"dist_km":70.45,"breach_pct":71.7},{"d":"2026-05-31","s":"Sheikh Zayed","riders":18,"vol":647,"opr":35.9,"del_min":31.5,"dist_km":10.22,"breach_pct":26.6},{"d":"2026-05-31","s":"Zahraa Maadi","riders":11,"vol":2454,"opr":223.1,"del_min":285.6,"dist_km":56.95,"breach_pct":41.3},{"d":"2026-06-01","s":"6th of October","riders":21,"vol":3633,"opr":173.0,"del_min":145.1,"dist_km":41.88,"breach_pct":27.4},{"d":"2026-06-01","s":"Dokki","riders":17,"vol":2635,"opr":155.0,"del_min":107.1,"dist_km":27.18,"breach_pct":16.9},{"d":"2026-06-01","s":"Fifth Settlement - 1st District","riders":17,"vol":3947,"opr":232.2,"del_min":414.3,"dist_km":61.95,"breach_pct":49.0},{"d":"2026-06-01","s":"First Settlement - El Banafseg","riders":15,"vol":3286,"opr":219.1,"del_min":403.3,"dist_km":58.28,"breach_pct":54.1},{"d":"2026-06-01","s":"Hadayek Al Ahram 2","riders":24,"vol":4067,"opr":169.5,"del_min":109.6,"dist_km":24.98,"breach_pct":12.5},{"d":"2026-06-01","s":"Marassi 2 - North Coast","riders":14,"vol":1170,"opr":83.6,"del_min":52.3,"dist_km":21.77,"breach_pct":24.4},{"d":"2026-06-01","s":"Nasr City - 9th District","riders":25,"vol":2782,"opr":111.3,"del_min":120.4,"dist_km":34.85,"breach_pct":46.0},{"d":"2026-06-01","s":"New Cairo - One Golden SQ","riders":13,"vol":2579,"opr":198.4,"del_min":568.6,"dist_km":64.89,"breach_pct":71.8},{"d":"2026-06-01","s":"Sheikh Zayed","riders":12,"vol":1028,"opr":85.7,"del_min":93.3,"dist_km":25.44,"breach_pct":29.7},{"d":"2026-06-01","s":"Zahraa Maadi","riders":13,"vol":1945,"opr":149.6,"del_min":170.3,"dist_km":34.17,"breach_pct":50.2},{"d":"2026-06-02","s":"6th of October","riders":20,"vol":3429,"opr":171.4,"del_min":185.8,"dist_km":44.7,"breach_pct":39.0},{"d":"2026-06-02","s":"Dokki","riders":14,"vol":2259,"opr":161.4,"del_min":121.4,"dist_km":29.26,"breach_pct":16.8},{"d":"2026-06-02","s":"Fifth Settlement - 1st District","riders":22,"vol":4138,"opr":188.1,"del_min":235.8,"dist_km":48.73,"breach_pct":50.2},{"d":"2026-06-02","s":"First Settlement - El Banafseg","riders":21,"vol":3013,"opr":143.5,"del_min":162.8,"dist_km":37.91,"breach_pct":44.1},{"d":"2026-06-02","s":"Hadayek Al Ahram 2","riders":21,"vol":3823,"opr":182.0,"del_min":115.9,"dist_km":24.65,"breach_pct":16.6},{"d":"2026-06-02","s":"Marassi 2 - North Coast","riders":15,"vol":1380,"opr":92.0,"del_min":57.7,"dist_km":23.85,"breach_pct":23.9},{"d":"2026-06-02","s":"Nasr City - 9th District","riders":25,"vol":3342,"opr":133.7,"del_min":163.1,"dist_km":40.98,"breach_pct":44.1},{"d":"2026-06-02","s":"New Cairo - One Golden SQ","riders":16,"vol":2518,"opr":157.4,"del_min":402.4,"dist_km":54.63,"breach_pct":67.7},{"d":"2026-06-02","s":"Sheikh Zayed","riders":19,"vol":1070,"opr":56.3,"del_min":51.5,"dist_km":16.12,"breach_pct":24.8},{"d":"2026-06-02","s":"Zahraa Maadi","riders":12,"vol":2296,"opr":191.3,"del_min":225.7,"dist_km":44.52,"breach_pct":46.6},{"d":"2026-06-03","s":"6th of October","riders":20,"vol":3707,"opr":185.3,"del_min":158.9,"dist_km":46.21,"breach_pct":37.3},{"d":"2026-06-03","s":"Dokki","riders":17,"vol":2431,"opr":143.0,"del_min":102.1,"dist_km":27.41,"breach_pct":17.3},{"d":"2026-06-03","s":"Fifth Settlement - 1st District","riders":25,"vol":3443,"opr":137.7,"del_min":233.0,"dist_km":34.59,"breach_pct":59.9},{"d":"2026-06-03","s":"First Settlement - El Banafseg","riders":21,"vol":3111,"opr":148.1,"del_min":156.8,"dist_km":38.35,"breach_pct":38.0},{"d":"2026-06-03","s":"Hadayek Al Ahram 2","riders":26,"vol":3752,"opr":144.3,"del_min":93.8,"dist_km":19.12,"breach_pct":20.4},{"d":"2026-06-03","s":"Marassi 2 - North Coast","riders":17,"vol":926,"opr":54.5,"del_min":33.5,"dist_km":13.37,"breach_pct":23.9},{"d":"2026-06-03","s":"Nasr City - 9th District","riders":28,"vol":3314,"opr":118.4,"del_min":140.4,"dist_km":35.46,"breach_pct":55.4},{"d":"2026-06-03","s":"New Cairo - One Golden SQ","riders":22,"vol":2589,"opr":117.7,"del_min":173.3,"dist_km":42.04,"breach_pct":54.7},{"d":"2026-06-03","s":"Sheikh Zayed","riders":18,"vol":1294,"opr":71.9,"del_min":72.3,"dist_km":22.76,"breach_pct":24.0},{"d":"2026-06-03","s":"Zahraa Maadi","riders":15,"vol":2318,"opr":154.5,"del_min":168.2,"dist_km":36.44,"breach_pct":39.2},{"d":"2026-06-04","s":"6th of October","riders":21,"vol":3550,"opr":169.0,"del_min":202.0,"dist_km":41.69,"breach_pct":40.5},{"d":"2026-06-04","s":"Dokki","riders":20,"vol":2469,"opr":123.5,"del_min":90.1,"dist_km":21.92,"breach_pct":21.3},{"d":"2026-06-04","s":"Fifth Settlement - 1st District","riders":23,"vol":3889,"opr":169.1,"del_min":218.0,"dist_km":45.9,"breach_pct":40.9},{"d":"2026-06-04","s":"First Settlement - El Banafseg","riders":17,"vol":3122,"opr":183.6,"del_min":227.1,"dist_km":48.92,"breach_pct":46.4},{"d":"2026-06-04","s":"Hadayek Al Ahram 2","riders":28,"vol":3913,"opr":139.8,"del_min":89.2,"dist_km":19.07,"breach_pct":17.0},{"d":"2026-06-04","s":"Marassi 2 - North Coast","riders":14,"vol":1351,"opr":96.5,"del_min":71.6,"dist_km":25.21,"breach_pct":32.7},{"d":"2026-06-04","s":"Nasr City - 9th District","riders":26,"vol":3210,"opr":123.5,"del_min":140.6,"dist_km":37.43,"breach_pct":46.4},{"d":"2026-06-04","s":"New Cairo - One Golden SQ","riders":18,"vol":2613,"opr":145.2,"del_min":259.1,"dist_km":50.89,"breach_pct":68.2},{"d":"2026-06-04","s":"Sheikh Zayed","riders":14,"vol":1035,"opr":73.9,"del_min":64.3,"dist_km":21.55,"breach_pct":23.0},{"d":"2026-06-04","s":"Zahraa Maadi","riders":16,"vol":1988,"opr":124.3,"del_min":115.0,"dist_km":27.93,"breach_pct":34.9},{"d":"2026-06-05","s":"6th of October","riders":26,"vol":3947,"opr":151.8,"del_min":137.5,"dist_km":34.18,"breach_pct":48.4},{"d":"2026-06-05","s":"Dokki","riders":22,"vol":3007,"opr":136.7,"del_min":90.1,"dist_km":24.28,"breach_pct":16.7},{"d":"2026-06-05","s":"Fifth Settlement - 1st District","riders":27,"vol":4989,"opr":184.8,"del_min":413.8,"dist_km":50.73,"breach_pct":67.3},{"d":"2026-06-05","s":"First Settlement - El Banafseg","riders":28,"vol":4544,"opr":162.3,"del_min":178.9,"dist_km":39.59,"breach_pct":46.7},{"d":"2026-06-05","s":"Hadayek Al Ahram 2","riders":31,"vol":4833,"opr":155.9,"del_min":113.7,"dist_km":21.97,"breach_pct":24.8},{"d":"2026-06-05","s":"Marassi 2 - North Coast","riders":19,"vol":1267,"opr":66.7,"del_min":48.8,"dist_km":16.97,"breach_pct":36.4},{"d":"2026-06-05","s":"Mokattam 2","riders":13,"vol":630,"opr":48.5,"del_min":57.4,"dist_km":11.13,"breach_pct":73.2},{"d":"2026-06-05","s":"Nasr City - 9th District","riders":31,"vol":4215,"opr":136.0,"del_min":150.7,"dist_km":39.62,"breach_pct":44.2},{"d":"2026-06-05","s":"New Cairo - One Golden SQ","riders":21,"vol":2979,"opr":141.9,"del_min":266.1,"dist_km":50.99,"breach_pct":59.6},{"d":"2026-06-05","s":"Sheikh Zayed","riders":19,"vol":1254,"opr":66.0,"del_min":63.1,"dist_km":18.33,"breach_pct":24.0},{"d":"2026-06-13","s":"6th of October","riders":24,"vol":3839,"opr":160.0,"del_min":143.7,"dist_km":39.91,"breach_pct":41.4},{"d":"2026-06-13","s":"Dokki","riders":19,"vol":1894,"opr":99.7,"del_min":64.3,"dist_km":18.6,"breach_pct":11.4},{"d":"2026-06-13","s":"Fifth Settlement - 1st District","riders":24,"vol":3889,"opr":162.0,"del_min":249.6,"dist_km":42.41,"breach_pct":55.8},{"d":"2026-06-13","s":"First Settlement - El Banafseg","riders":21,"vol":3733,"opr":177.8,"del_min":211.2,"dist_km":45.33,"breach_pct":46.5},{"d":"2026-06-13","s":"Hadayek Al Ahram 2","riders":28,"vol":4356,"opr":155.6,"del_min":112.6,"dist_km":21.23,"breach_pct":30.5},{"d":"2026-06-13","s":"Marassi 2 - North Coast","riders":17,"vol":1580,"opr":92.9,"del_min":66.7,"dist_km":24.79,"breach_pct":29.3},{"d":"2026-06-13","s":"Mokattam 2","riders":13,"vol":1231,"opr":94.7,"del_min":103.2,"dist_km":25.71,"breach_pct":50.9},{"d":"2026-06-13","s":"Nasr City - 9th District","riders":29,"vol":3931,"opr":135.6,"del_min":190.7,"dist_km":41.27,"breach_pct":54.2},{"d":"2026-06-13","s":"New Cairo - One Golden SQ","riders":19,"vol":2860,"opr":150.5,"del_min":332.5,"dist_km":52.76,"breach_pct":70.3},{"d":"2026-06-13","s":"Sheikh Zayed","riders":16,"vol":1275,"opr":79.7,"del_min":79.8,"dist_km":24.51,"breach_pct":29.1},{"d":"2026-06-13","s":"Sheraton","riders":10,"vol":636,"opr":63.6,"del_min":83.0,"dist_km":22.03,"breach_pct":84.9},{"d":"2026-06-13","s":"Sherouk","riders":8,"vol":780,"opr":97.5,"del_min":79.5,"dist_km":23.06,"breach_pct":33.6},{"d":"2026-06-13","s":"Zahraa Maadi","riders":15,"vol":2778,"opr":185.2,"del_min":199.5,"dist_km":42.32,"breach_pct":36.6},{"d":"2026-06-20","s":"6th of October","riders":22,"vol":3712,"opr":168.7,"del_min":136.1,"dist_km":41.46,"breach_pct":30.5},{"d":"2026-06-20","s":"Dokki","riders":17,"vol":2353,"opr":138.4,"del_min":88.5,"dist_km":24.63,"breach_pct":12.3},{"d":"2026-06-20","s":"Fifth Settlement - 1st District","riders":27,"vol":3980,"opr":147.4,"del_min":170.0,"dist_km":39.1,"breach_pct":38.4},{"d":"2026-06-20","s":"First Settlement - El Banafseg","riders":23,"vol":3748,"opr":163.0,"del_min":138.2,"dist_km":41.24,"breach_pct":23.2},{"d":"2026-06-20","s":"Hadayek Al Ahram 2","riders":24,"vol":4829,"opr":201.2,"del_min":161.7,"dist_km":29.53,"breach_pct":35.0},{"d":"2026-06-20","s":"Marassi 2 - North Coast","riders":17,"vol":2880,"opr":169.4,"del_min":109.0,"dist_km":40.22,"breach_pct":24.5},{"d":"2026-06-20","s":"Mokattam 2","riders":13,"vol":1877,"opr":144.4,"del_min":132.8,"dist_km":33.92,"breach_pct":28.4},{"d":"2026-06-20","s":"Nasr City - 9th District","riders":25,"vol":4576,"opr":183.0,"del_min":205.8,"dist_km":57.21,"breach_pct":25.3},{"d":"2026-06-20","s":"New Cairo - One Golden SQ","riders":26,"vol":3036,"opr":116.8,"del_min":172.1,"dist_km":41.4,"breach_pct":56.7},{"d":"2026-06-20","s":"Sheikh Zayed","riders":16,"vol":1460,"opr":91.3,"del_min":86.2,"dist_km":25.47,"breach_pct":28.8},{"d":"2026-06-20","s":"Sheraton","riders":16,"vol":1493,"opr":93.3,"del_min":90.6,"dist_km":31.09,"breach_pct":58.7},{"d":"2026-06-20","s":"Sherouk","riders":11,"vol":1086,"opr":98.7,"del_min":90.3,"dist_km":24.33,"breach_pct":25.0},{"d":"2026-06-20","s":"Zahraa Maadi","riders":17,"vol":2993,"opr":176.1,"del_min":175.1,"dist_km":40.72,"breach_pct":34.1},{"d":"2026-06-23","s":"6th of October","riders":24,"vol":3750,"opr":156.3,"del_min":129.8,"dist_km":38.56,"breach_pct":32.2},{"d":"2026-06-23","s":"Dokki","riders":22,"vol":2884,"opr":131.1,"del_min":88.1,"dist_km":23.11,"breach_pct":16.0},{"d":"2026-06-23","s":"Fifth Settlement - 1st District","riders":29,"vol":4624,"opr":159.4,"del_min":173.1,"dist_km":41.59,"breach_pct":34.5},{"d":"2026-06-23","s":"First Settlement - El Banafseg","riders":28,"vol":3893,"opr":139.0,"del_min":126.0,"dist_km":37.02,"breach_pct":28.1},{"d":"2026-06-23","s":"Hadayek Al Ahram 2","riders":30,"vol":4978,"opr":165.9,"del_min":119.5,"dist_km":22.64,"breach_pct":32.5},{"d":"2026-06-23","s":"Marassi 2 - North Coast","riders":18,"vol":1741,"opr":96.7,"del_min":77.4,"dist_km":24.06,"breach_pct":24.8},{"d":"2026-06-23","s":"Mokattam 2","riders":17,"vol":1686,"opr":99.2,"del_min":91.3,"dist_km":22.45,"breach_pct":31.9},{"d":"2026-06-23","s":"Nasr City - 9th District","riders":24,"vol":4047,"opr":168.6,"del_min":226.4,"dist_km":51.59,"breach_pct":34.7},{"d":"2026-06-23","s":"New Cairo - One Golden SQ","riders":29,"vol":3700,"opr":127.6,"del_min":176.3,"dist_km":45.67,"breach_pct":51.2},{"d":"2026-06-23","s":"Sheikh Zayed","riders":19,"vol":1546,"opr":81.4,"del_min":97.5,"dist_km":26.52,"breach_pct":33.9},{"d":"2026-06-23","s":"Sheraton","riders":17,"vol":1569,"opr":92.3,"del_min":87.5,"dist_km":31.78,"breach_pct":39.3}];
+
+// ══ PALETTE & HELPERS ══
+const PAL=['#00B4A6','#F5A623','#7C3AED','#22D3A0','#F97316','#3B82F6','#EC4899','#A3E635','#FB923C','#818CF8','#34D399','#F43F5E','#60A5FA'];
+const CH={};
+const $=id=>document.getElementById(id);
+const fmt=(v,d=0)=>v==null||isNaN(v)?'—':Number(v).toLocaleString('en',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fE=v=>v==null||isNaN(v)?'—':'EGP '+Number(v).toFixed(1);
+const pct=(v,d=1)=>v==null||isNaN(v)?'—':Number(v).toFixed(d)+'%';
+const col=(v,lo,hi)=>v<=lo?'var(--ok)':v<=hi?'var(--warn)':'var(--danger)';
+const kd=k=>{if(CH[k]){CH[k].destroy();delete CH[k];}};
+const mlbl=ym=>{const[y,m]=ym.split('-');return new Date(+y,+m-1,1).toLocaleString('en',{month:'long',year:'numeric'});};
+const CB={
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#0D2137',borderColor:'#1E3A5F',borderWidth:1,titleColor:'#7B9EC0',bodyColor:'#E8F4FD',padding:8}},
+  scales:{
+    x:{grid:{color:'#1E3A5F44'},ticks:{color:'#7B9EC0',font:{size:10}},border:{display:false}},
+    y:{grid:{color:'#1E3A5F44'},ticks:{color:'#7B9EC0',font:{size:10}},border:{display:false}}
+  }
+};
+
+// ══ BQ FILTER HELPERS ══
+function bqF(mo,st,day){
+  return BQ.filter(r=>{
+    const mok=!mo||mo==='ALL'||r.d.startsWith(mo);
+    const sok=!st||st==='ALL'||r.s===st;
+    const dok=!day||day==='ALL'||r.d===day;
+    return mok&&sok&&dok;
+  });
+}
+function aByS(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.s]) m[r.s]={s:r.s,del:0,dly:0,br:0,cmp:0,aw:0,an:0};
+    const x=m[r.s];
+    x.del+=r.del; x.dly+=r.dly; x.br+=r.br; x.cmp+=r.cmp||0;
+    if(r.ata>0){x.aw+=r.ata*r.del; x.an+=r.del;}
+  });
+  return Object.values(m).map(r=>({...r,avg_ata:r.an?r.aw/r.an:0}));
+}
+function aByD(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.d]) m[r.d]={d:r.d,del:0,dly:0,br:0,cmp:0};
+    const x=m[r.d];
+    x.del+=r.del; x.dly+=r.dly; x.br+=r.br; x.cmp+=r.cmp||0;
+  });
+  return Object.values(m).sort((a,b)=>a.d.localeCompare(b.d));
+}
+
+// ══ INIT DROPDOWNS ══
+function initDrops(){
+  const STORES=[...new Set(BQ.map(r=>r.s))].sort();
+  const VSTORES=[...new Set(VD.map(r=>r.s))].sort();
+  const VENDORS=[...new Set(VD.map(r=>r.v))].sort();
+  const sOpts='<option value="ALL">All Stores</option>'+STORES.map(s=>`<option value="${s}">${s}</option>`).join('');
+  // BQ store dropdowns
+  ['trdst','s1s','sts','qs','kpi-st','u-st'].forEach(id=>{const el=$(id);if(el)el.innerHTML=sOpts;});
+  const uStores=[...new Set(UTIL_MO.map(r=>r.s))].sort();
+  const uTrendOpts='<option value="ALL">All Stores (avg)</option>'+uStores.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
+  const utst=$('u-trend-st');if(utst)utst.innerHTML=uTrendOpts;
+  // CPO store dropdowns (only stores that have CPO data in Sheet — June)
+  const cpoStores=Object.keys(STORE_CPO).sort();
+  const cpoOpts='<option value="ALL">All Stores</option>'+cpoStores.map(s=>`<option value="${s}">${s}</option>`).join('');
+  ['cpo-kpi-st','cpo-chart-st','cpo-tbl-st'].forEach(id=>{const el=$(id);if(el)el.innerHTML=cpoOpts;});
+  // Vendor dropdowns
+  const vsOpts='<option value="ALL">All Stores</option>'+VSTORES.map(s=>`<option value="${s}">${s}</option>`).join('');
+  const vvOpts='<option value="ALL">All Vendors</option>'+VENDORS.map(v=>`<option value="${v}">${v}</option>`).join('');
+  [$('vs')].forEach(el=>{if(el)el.innerHTML=vsOpts;});
+  [$('vv')].forEach(el=>{if(el)el.innerHTML=vvOpts;});
+  [$('vtv')].forEach(el=>{if(el)el.innerHTML=vvOpts;});
+
+  // ── Populate all Day dropdowns dynamically from BQ dates ──
+  const allDates=JSON.parse('["2026-06-24", "2026-06-23", "2026-06-22", "2026-06-21", "2026-06-20", "2026-06-19", "2026-06-18", "2026-06-17", "2026-06-16", "2026-06-15", "2026-06-14", "2026-06-13", "2026-06-12", "2026-06-11", "2026-06-10", "2026-06-09", "2026-06-08", "2026-06-07", "2026-06-06", "2026-06-05", "2026-06-04", "2026-06-03", "2026-06-02", "2026-06-01", "2026-05-31", "2026-05-30", "2026-05-29", "2026-05-28", "2026-05-27", "2026-05-26", "2026-05-25", "2026-05-24", "2026-05-23", "2026-05-22", "2026-05-21", "2026-05-20", "2026-05-19", "2026-05-18", "2026-05-17", "2026-05-16", "2026-05-15", "2026-05-14", "2026-05-13", "2026-05-12", "2026-05-11", "2026-05-10", "2026-05-09", "2026-05-08", "2026-05-07", "2026-05-06", "2026-05-05", "2026-05-04", "2026-05-03", "2026-05-02", "2026-05-01", "2026-04-30", "2026-04-29", "2026-04-28", "2026-04-27", "2026-04-26", "2026-04-25", "2026-04-24", "2026-04-23", "2026-04-22", "2026-04-21", "2026-04-20", "2026-04-19", "2026-04-18", "2026-04-17", "2026-04-16", "2026-04-15", "2026-04-14", "2026-04-13", "2026-04-12", "2026-04-11", "2026-04-10", "2026-04-09", "2026-04-07", "2026-04-06", "2026-04-05", "2026-04-04"]');
+  const dayOptsHtml='<option value="ALL">All Days</option>'+
+    allDates.map(d=>{
+      const dt=new Date(d+'T00:00:00');
+      const lbl=dt.toLocaleDateString('en',{month:'short',day:'numeric'});
+      return '<option value="'+d+'">'+lbl+'</option>';
+    }).join('');
+  ['kpi-day','trd-day','s1-day','sb-day','st-day','q-day','v-day','u-day'].forEach(id=>{
+    const el=$(id);if(el)el.innerHTML=dayOptsHtml;
+  });
+}
+
+// ══ TAB SWITCHING ══
+function go(i){
+  document.querySelectorAll('.pane').forEach((p,j)=>p.classList.toggle('on',j===i));
+  document.querySelectorAll('.tab').forEach((b,j)=>b.classList.toggle('on',j===i));
+  [rT0,rT1,rT2,rT3,rT4][i]();
+}
+
+// ══════════════════════════════════════════
+// TAB 0: LEADERSHIP
+// ══════════════════════════════════════════
+function rT0(){
+  rKpiOrders();
+  rKpiCpo();
+  rCpoChart();
+  rCpoTable();
+  rAov();
+  rTrend();
+}
+
+// ── Order Volume KPIs (reactive to month + store filters) ──
+function rKpiOrders(){
+  const mo=$('kpi-mo').value;
+  const st=$('kpi-st').value;
+  const day=($('kpi-day')||{value:'ALL'}).value;
+  const rows=bqF(mo==='ALL'&&day==='ALL'?null:mo==='ALL'?null:mo, st, day);
+  const total=rows.reduce((s,r)=>s+r.del,0);
+
+  // Peak day — always YTD all stores (leadership context)
+  const allByD=aByD(BQ);
+  const peak=allByD.reduce((mx,r)=>r.del>mx.del?r:mx,{del:0,d:'—'});
+
+  // Avg/day for selected slice
+  const days=new Set(rows.map(r=>r.d)).size;
+  const avg=days?Math.round(total/days):0;
+
+  // Label for sub
+  const moLbl=mo==='ALL'?'Apr 4 – Jun 25':mlbl(mo);
+  const stLbl=st==='ALL'?'All Stores':st.split(' - ')[0].split(' ').slice(0,3).join(' ');
+
+  $('kv0').innerHTML=`
+    <div class="card kpi" style="border-left:3px solid var(--gold)">
+      <div class="lbl">Peak Day (YTD)</div>
+      <div class="val" style="color:var(--gold)">${fmt(peak.del)}</div>
+      <div class="sub">${peak.d} · All Stores · YTD</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Total Orders</div>
+      <div class="val" style="color:var(--teal)">${fmt(total)}</div>
+      <div class="sub">${moLbl} · ${stLbl}</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Active Days</div>
+      <div class="val" style="color:var(--gold)">${fmt(days)}</div>
+      <div class="sub">${moLbl} · ${stLbl}</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Avg Orders / Day</div>
+      <div class="val" style="color:var(--ok)">${fmt(avg)}</div>
+      <div class="sub">${moLbl} · ${stLbl}</div>
+    </div>`;
+}
+
+// ── CPO KPIs (reactive to month + store filters) ──
+function rKpiCpo(){
+  const mo=$('cpo-kpi-mo').value;
+  const st=$('cpo-kpi-st').value;
+
+  // Determine MTD data from Sheet
+  let mtd=null, mtdLabel='';
+  if(mo==='2026-05'){
+    mtd=MAY_MTD; mtdLabel='May 2026';
+  } else if(mo==='2026-06'){
+    mtd=JUN_MTD; mtdLabel='Jun 2026';
+  } else {
+    // Combined May+Jun
+    const tO=MAY_MTD.totalOrders+JUN_MTD.totalOrders;
+    const tC=MAY_MTD.totalCost+JUN_MTD.totalCost;
+    const tR=MAY_MTD.riderCut+JUN_MTD.riderCut;
+    mtd={totalOrders:tO,totalCost:tC,riderCut:tR,cpo:tO?+(tC/tO).toFixed(1):0,cpoExcl:tO?+(tR/tO).toFixed(1):0};
+    mtdLabel='May + Jun 2026';
+  }
+
+  // Store-level CPO from STORE_CPO (June only — sheet limitation)
+  let cpoBadge='', exclBadge='';
+  if(st!=='ALL' && STORE_CPO[st]){
+    const sCpo=STORE_CPO[st];
+    const diff=+(sCpo-JUN_MTD.cpo).toFixed(1);
+    cpoBadge=` <span style="font-size:10px;color:${diff<=0?'var(--ok)':'var(--danger)'}">${diff<=0?'▼':'▲'} ${Math.abs(diff)} vs avg</span>`;
+  }
+
+  const stLbl=st==='ALL'?'All Stores':st.split(' - ')[0].split(' ').slice(0,3).join(' ');
+  const stCpo=st!=='ALL'&&STORE_CPO[st]?STORE_CPO[st]:null;
+
+  $('kvcpo').innerHTML=`
+    <div class="card kpi">
+      <div class="lbl">MTD CPO${st!=='ALL'?' · '+stLbl:''} <span style="font-size:9px;color:#a78bfa">● Sheet</span></div>
+      <div class="val" style="color:var(--teal)">${stCpo&&mo==='2026-06'?'EGP '+stCpo:'EGP '+mtd.cpo}${cpoBadge}</div>
+      <div class="sub">${mtdLabel} · ${fmt(mtd.totalOrders)} orders</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">CPO Excl. Vendor <span style="font-size:9px;color:#a78bfa">● Sheet</span></div>
+      <div class="val" style="color:var(--ok)">EGP ${mtd.cpoExcl}</div>
+      <div class="sub">Rider cut only · ${mtdLabel}</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Total Rider Cost <span style="font-size:9px;color:#a78bfa">● Sheet</span></div>
+      <div class="val" style="font-size:18px;color:var(--gold)">EGP ${(mtd.riderCut/1e6).toFixed(2)}M</div>
+      <div class="sub">${mtdLabel}</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Total Cost <span style="font-size:9px;color:#a78bfa">● Sheet</span></div>
+      <div class="val" style="font-size:18px;color:var(--text)">EGP ${(mtd.totalCost/1e6).toFixed(2)}M</div>
+      <div class="sub">${mtdLabel} · Rider + Vendor</div>
+    </div>`;
+}
+
+// ── AOV (reactive to CPO filters) ──
+function rAov(){
+  const mo=$('cpo-kpi-mo').value;
+  const st=$('cpo-kpi-st').value;
+  let mtd=null, mtdLabel='';
+  if(mo==='2026-05'){ mtd=MAY_MTD; mtdLabel='May 2026'; }
+  else if(mo==='2026-06'){ mtd=JUN_MTD; mtdLabel='Jun 2026'; }
+  else {
+    const tO=MAY_MTD.totalOrders+JUN_MTD.totalOrders;
+    const tC=MAY_MTD.totalCost+JUN_MTD.totalCost;
+    mtd={totalOrders:tO,totalCost:tC}; mtdLabel='May + Jun 2026';
+  }
+  const aov=mtd.totalOrders?+(mtd.totalCost/mtd.totalOrders).toFixed(1):0;
+
+  // BQ orders for cross-reference
+  const bqRows=bqF(mo==='ALL'?null:mo, st);
+  const bqOrd=bqRows.reduce((s,r)=>s+r.del,0);
+  const stLbl=st==='ALL'?'All Stores':st.split(' - ')[0].split(' ').slice(0,3).join(' ');
+
+  $('kvaov').innerHTML=`
+    <div class="card kpi">
+      <div class="lbl">AOV (Cost/Order) <span style="font-size:9px;color:#a78bfa">● Sheet</span></div>
+      <div class="val" style="color:var(--teal)">EGP ${aov}</div>
+      <div class="sub">${mtdLabel} · Total Cost ÷ Sheet Orders</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">Sheet Orders <span style="font-size:9px;color:#a78bfa">● Sheet</span></div>
+      <div class="val" style="color:var(--gold)">${fmt(mtd.totalOrders)}</div>
+      <div class="sub">${mtdLabel} · From CPO sheet</div>
+    </div>
+    <div class="card kpi">
+      <div class="lbl">BQ Orders (Cross-check) <span style="font-size:9px;color:var(--teal)">● BQ</span></div>
+      <div class="val" style="color:var(--muted)">${fmt(bqOrd)}</div>
+      <div class="sub">${mtdLabel} · ${stLbl}</div>
+    </div>`;
+}
+
+function rCpoChart(){
+  const gran=$('cpogran').value;
+  const monf=$('cpomon').value;
+  const stf=($('cpo-chart-st')||{value:'ALL'}).value;
+  // Overall CPO rows (no store filter at daily level — sheet only has overall daily)
+  let rows=CPOD.filter(r=>r.cpo&&r.totalOrders>0);
+  if(monf!=='ALL') rows=rows.filter(r=>r.ym===monf);
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+  // If store selected, overlay store CPO as a reference line
+  const storeCpo=stf!=='ALL'&&STORE_CPO[stf]?STORE_CPO[stf]:null;
+  let lbl=[],d1=[],d2=[];
+  if(gran==='weekly'){
+    const w={};
+    rows.forEach(r=>{
+      const dt=new Date(r.date),yr=dt.getFullYear(),wk=Math.ceil((dt-new Date(yr,0,1))/6048e5);
+      const k=yr+'-W'+String(wk).padStart(2,'0');
+      if(!w[k])w[k]={c:0,e:0,n:0};
+      w[k].c+=r.cpo||0; w[k].e+=r.cpoExcl||0; w[k].n++;
+    });
+    Object.entries(w).sort().forEach(([k,v])=>{lbl.push(k.slice(5));d1.push(+(v.c/v.n).toFixed(1));d2.push(+(v.e/v.n).toFixed(1));});
+  } else {
+    rows.forEach(r=>{lbl.push(r.date.slice(5));d1.push(r.cpo);d2.push(r.cpoExcl);});
+  }
+  const datasets=[
+    {label:'Overall CPO',data:d1,borderColor:'#00B4A6',backgroundColor:'#00B4A618',borderWidth:2,tension:0.3,pointRadius:gran==='daily'&&d1.length>20?0:3,fill:true},
+    {label:'Excl.Vendor',data:d2,borderColor:'#22D3A0',borderWidth:1.5,borderDash:[5,4],tension:0.3,pointRadius:0,fill:false}
+  ];
+  if(storeCpo){
+    datasets.push({label:stf.split(' - ')[0].split(' ').slice(0,2).join(' ')+' avg CPO',data:d1.map(()=>storeCpo),borderColor:'#F5A623',borderWidth:1.5,borderDash:[3,3],pointRadius:0,fill:false});
+  }
+  kd('cpoC');
+  CH.cpoC=new Chart($('cpoC').getContext('2d'),{type:'line',
+    data:{labels:lbl,datasets},
+    options:{...CB,
+      plugins:{...CB.plugins,
+        legend:{display:true,labels:{color:'#7B9EC0',font:{size:10},boxWidth:10}},
+        tooltip:{...CB.plugins.tooltip,callbacks:{label:ctx=>`${ctx.dataset.label}: EGP ${ctx.parsed.y?.toFixed(1)||'—'}`}}
+      },
+      scales:{...CB.scales,y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,callback:v=>'EGP '+v}}}
+    }
+  });
+}
+
+function rCpoTable(){
+  const mo=($('cpo-tbl-mo')||{value:'2026-06'}).value;
+  const st=($('cpo-tbl-st')||{value:'ALL'}).value;
+  // BQ orders for the selected month
+  const bqOrd={};
+  bqF(mo,st==='ALL'?null:st).forEach(r=>{bqOrd[r.s]=(bqOrd[r.s]||0)+r.del;});
+  // MTD avg CPO for selected month
+  const mtd=mo==='2026-05'?MAY_MTD:JUN_MTD;
+  const avgCpo=mtd.cpo;
+  const moLabel=mlbl(mo);
+  const tblH=$('cpo-tbl-h');
+  if(tblH) tblH.innerHTML=`CPO by Store — ${moLabel} <span style="font-size:10px;color:#a78bfa">● CPO_Egypt Sheet</span>`;
+  // Only Jun has per-store CPO from sheet; May shows N/A for store CPO
+  const STORES=[...new Set(BQ.map(r=>r.s))].sort().filter(s=>st==='ALL'||s===st);
+  let h='';
+  STORES.forEach(s=>{
+    const bO=bqOrd[s]||0;
+    // Store CPO only available for June
+    const cpo=mo==='2026-06'?(STORE_CPO[s]||null):null;
+    const diff=cpo?+(cpo-avgCpo).toFixed(1):null;
+    h+=`<tr>
+      <td>${s}</td>
+      <td class="r">${fmt(bO)}</td>
+      <td class="r" style="color:${cpo?col(cpo,avgCpo*0.9,avgCpo*1.1):'var(--muted)'};font-weight:600">
+        ${cpo?'EGP '+cpo:(mo==='2026-05'?'N/A (May)':'—')}
+      </td>
+      <td class="r" style="color:${diff==null?'var(--muted)':diff<=0?'var(--ok)':'var(--danger)'}">
+        ${diff==null?'—':(diff<=0?'▼ ':'▲ ')+Math.abs(diff)}
+      </td>
+    </tr>`;
+  });
+  $('cpotb').innerHTML=h||'<tr><td colspan="4" style="color:var(--muted);padding:10px;text-align:center">No data</td></tr>';
+}
+
+function rTrend(){
+  const st=$('trdst').value;
+  const gran=$('trdgran').value;
+  const day=($('trd-day')||{value:'ALL'}).value;
+  const rows=bqF(null,st,day);
+  let lbl=[],data=[];
+  if(gran==='daily'){
+    const byD=aByD(rows);lbl=byD.map(r=>r.d.slice(5));data=byD.map(r=>r.del);
+  } else if(gran==='weekly'){
+    const w={};rows.forEach(r=>{const dt=new Date(r.d),yr=dt.getFullYear(),wk=Math.ceil((dt-new Date(yr,0,1))/6048e5);const k=yr+'-W'+String(wk).padStart(2,'0');w[k]=(w[k]||0)+r.del;});
+    Object.entries(w).sort().forEach(([k,v])=>{lbl.push(k.slice(5));data.push(v);});
+  } else {
+    const m={};rows.forEach(r=>{const ym=r.d.slice(0,7);m[ym]=(m[ym]||0)+r.del;});
+    Object.entries(m).sort().forEach(([ym,v])=>{lbl.push(new Date(ym+'-01').toLocaleString('en',{month:'short',year:'2-digit'}));data.push(v);});
+  }
+  kd('trdC');
+  CH.trdC=new Chart($('trdC').getContext('2d'),{type:'line',
+    data:{labels:lbl,datasets:[{data,borderColor:'#00B4A6',backgroundColor:'#00B4A610',borderWidth:2,tension:0.3,pointRadius:gran==='daily'&&data.length>25?0:4,fill:true,pointBackgroundColor:'#00B4A6'}]},
+    options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:ctx=>`Delivered: ${fmt(ctx.parsed.y)}`}}}}
+  });
+}
+
+// ══════════════════════════════════════════
+// TAB 1: STORES
+// ══════════════════════════════════════════
+function rT1(){rStores();rSBar();rSTrend();rYtd();}
+
+function rStores(){
+  const mo=$('s1m').value;
+  const st=$('s1s').value;
+  const day=($('s1-day')||{value:'ALL'}).value;
+  const rows=bqF(mo==='ALL'&&day==='ALL'?null:mo, st, day);
+  const byS=aByS(rows).sort((a,b)=>b.del-a.del);
+  const tot=byS.reduce((s,r)=>s+r.del,0);
+  let h='';
+  byS.forEach((r,i)=>{
+    const c=PAL[i%PAL.length];
+    const days=new Set(rows.filter(x=>x.s===r.s).map(x=>x.d)).size;
+    const avgd=days?Math.round(r.del/days):0;
+    h+=`<div class="sc">
+      <div class="sn" style="color:${c}">${r.s}</div>
+      <div class="sv">${fmt(r.del)}</div>
+      <div class="sm">
+        <div><div class="sl">Share</div><div class="sv2" style="color:var(--gold)">${tot?pct(r.del/tot*100):'—'}</div></div>
+        <div><div class="sl">Avg/Day</div><div class="sv2" style="color:var(--teal)">${fmt(avgd)}</div></div>
+        <div><div class="sl">Avg ATA</div><div class="sv2" style="color:${col(r.avg_ata,15,20)}">${r.avg_ata>0?r.avg_ata.toFixed(1)+' min':'N/A'}</div></div>
+        <div><div class="sl">Breach%</div><div class="sv2" style="color:${col(r.del?r.br/r.del*100:0,30,50)}">${r.del?pct(r.br/r.del*100):'—'}</div></div>
+        <div><div class="sl">Delayed&gt;15</div><div class="sv2" style="color:var(--warn)">${fmt(r.dly)}</div></div>
+        <div><div class="sl">Complaints</div><div class="sv2">${fmt(r.cmp)}</div></div>
+      </div>
+    </div>`;
+  });
+  $('sgrid').innerHTML=h||'<p style="color:var(--muted)">No data</p>';
+}
+
+function rSBar(){
+  const mo=$('sbm').value;
+  const day=($('sb-day')||{value:'ALL'}).value;
+  const rows=bqF(mo==='ALL'&&day==='ALL'?null:mo,'ALL',day);
+  const byS=aByS(rows).sort((a,b)=>b.del-a.del);
+  $('sbh').textContent='Orders by Store — '+(mo==='ALL'?'All Months':mlbl(mo));
+  kd('sbC');
+  CH.sbC=new Chart($('sbC').getContext('2d'),{type:'bar',
+    data:{labels:byS.map(r=>r.s.split(' ')[0]),datasets:[{data:byS.map(r=>r.del),backgroundColor:PAL.slice(0,byS.length),borderRadius:4}]},
+    options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{title:ctx=>byS[ctx[0].dataIndex]?.s||'',label:ctx=>`Orders: ${fmt(ctx.parsed.y)}`}}}}
+  });
+}
+
+function rSTrend(){
+  const mo=$('stm').value;
+  const st=$('sts').value;
+  const met=$('stmet').value;
+  const day=($('st-day')||{value:'ALL'}).value;
+  const rows=bqF(mo==='ALL'&&day==='ALL'?null:mo,st,day);
+  const byD=aByD(rows);
+  const lbl={'del':'Delivered','dly':'Delayed >15min'}[met];
+  const mc={'del':'#F5A623','dly':'#FF6B6B'}[met];
+  $('sth').textContent=lbl+' — '+(st==='ALL'?'All Stores':st);
+  kd('stC');
+  CH.stC=new Chart($('stC').getContext('2d'),{type:'line',
+    data:{labels:byD.map(r=>r.d.slice(5)),datasets:[{data:byD.map(r=>r[met]||0),borderColor:mc,borderWidth:2,tension:0.3,pointRadius:byD.length>25?0:3,fill:false}]},
+    options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:ctx=>`${lbl}: ${fmt(ctx.parsed.y)}`}}}}
+  });
+}
+
+function rYtd(){
+  let h='';
+  YTD.forEach(r=>{
+    h+=`<tr>
+      <td>${r.s}</td>
+      <td class="r" style="font-weight:600;color:var(--teal)">${fmt(r.ytd)}</td>
+      <td class="r" style="color:var(--muted)">${r.first}</td>
+      <td class="r">${r.days}</td>
+      <td class="r" style="color:var(--gold)">${fmt(Math.round(r.ytd/r.days))}</td>
+    </tr>`;
+  });
+  $('ytdtb').innerHTML=h;
+}
+
+// ══════════════════════════════════════════
+// TAB 2: DELAYS & QUALITY
+// ══════════════════════════════════════════
+function rT2(){rQual();}
+
+function rQual(){
+  const mo=$('qm').value;
+  const st=$('qs').value;
+  const met=$('qmet').value;
+  const day=($('q-day')||{value:'ALL'}).value;
+  const allR=bqF(mo==='ALL'&&day==='ALL'?null:mo,st,day);
+  const ataR=allR.filter(r=>r.ata>0);
+  const tD=allR.reduce((s,r)=>s+r.del,0);
+  const tDl=ataR.reduce((s,r)=>s+r.dly,0);
+  const tBr=ataR.reduce((s,r)=>s+r.br,0);
+  const tCmp=allR.reduce((s,r)=>s+r.cmp,0);
+  const ataN=ataR.reduce((s,r)=>s+r.del,0);
+  const ataW=ataR.reduce((s,r)=>s+r.ata*r.del,0);
+  const avgA=ataN?ataW/ataN:0;
+  const lbl2=mo==='ALL'?'YTD (ATA: May27+)':mlbl(mo);
+  $('qd').textContent=fmt(tD);  $('qds').textContent=lbl2;
+  $('qdl').textContent=fmt(tDl); $('qdls').textContent=tD?pct(tDl/tD*100)+' of delivered':'—';
+  $('qa').textContent=avgA>0?avgA.toFixed(1):'—';
+  $('qb').textContent=fmt(tBr);  $('qbs').textContent=tD?pct(tBr/tD*100)+' of delivered':'—';
+  $('qc').textContent=fmt(tCmp); $('qcs').textContent=lbl2;
+  $('qcr').textContent=tD?pct(tCmp/tD*100):'—';
+
+  const byS=aByS(ataR.length?ataR:allR).filter(r=>r.del>0).sort((a,b)=>b.del-a.del);
+  const DC=['#FF6B6B','#F5A623','#7C3AED','#00B4A6','#22D3A0','#3B82F6','#EC4899','#A3E635','#FB923C','#818CF8','#34D399','#F43F5E','#60A5FA'];
+
+  const mFn={dly:r=>r.dly,dly_pct:r=>r.del?r.dly/r.del*100:0,br_pct:r=>r.del?r.br/r.del*100:0}[met]||(r=>r.dly);
+  const mLbl={dly:'Delayed',dly_pct:'Delay %',br_pct:'Breach %'}[met]||'Delayed';
+  const dD=byS.map(mFn);
+  const dT=dD.reduce((s,v)=>s+v,0);
+  $('dv').textContent=met==='dly'?fmt(dT):pct(dT/Math.max(byS.length,1));
+  $('dlbl').textContent=mLbl.toLowerCase();
+
+  kd('dlyD');
+  CH.dlyD=new Chart($('dlyD').getContext('2d'),{type:'doughnut',
+    data:{labels:byS.map(r=>r.s),datasets:[{data:dD,backgroundColor:DC.slice(0,byS.length),borderWidth:2,borderColor:'#112240',hoverOffset:6}]},
+    options:{cutout:'62%',responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#0D2137',borderColor:'#1E3A5F',borderWidth:1,bodyColor:'#E8F4FD',
+          callbacks:{
+            title:ctx=>byS[ctx[0].dataIndex]?.s||'',
+            label:ctx=>{
+              const r=byS[ctx.dataIndex];
+              return [
+                ' Delayed: '+fmt(r.dly)+' ('+(r.del?pct(r.dly/r.del*100):'—')+')',
+                ' Breach: '+fmt(r.br)+' ('+(r.del?pct(r.br/r.del*100):'—')+')',
+                ' Delivered: '+fmt(r.del)
+              ];
+            }
+          }
+        }
+      }
+    }
+  });
+
+  let lg='';
+  byS.forEach((r,i)=>{
+    lg+=`<div style="display:flex;align-items:center;gap:3px">
+      <div style="width:8px;height:8px;border-radius:2px;background:${DC[i%DC.length]};flex-shrink:0"></div>
+      <span style="color:#7B9EC0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        ${r.s.split(' - ')[0].split(' ').slice(0,2).join(' ')}: <b style="color:#E8F4FD">${met==='dly'?fmt(mFn(r)):pct(mFn(r))}</b>
+      </span>
+    </div>`;
+  });
+  $('dleg').innerHTML=lg;
+
+  const brS=[...byS].sort((a,b)=>(b.del?b.br/b.del:0)-(a.del?a.br/a.del:0));
+  // Red gradient: most breached = rgb(180,0,0), least = rgb(255,200,200)
+  const brVals=brS.map(r=>r.del?r.br/r.del*100:0);
+  const brMax=Math.max(...brVals,1);
+  const brMin=Math.min(...brVals,0);
+  const brColors=brVals.map(v=>{
+    const t=brMax===brMin?1:(v-brMin)/(brMax-brMin); // 0=lightest,1=darkest
+    const r=Math.round(255-(255-160)*t);  // 255 → 160
+    const g=Math.round(200-(200-0)*t);    // 200 → 0
+    const b=Math.round(200-(200-0)*t);    // 200 → 0
+    return `rgba(${r},${g},${b},0.9)`;
+  });
+  kd('brB');
+  CH.brB=new Chart($('brB').getContext('2d'),{type:'bar',
+    data:{labels:brS.map(r=>r.s.split(' - ')[0].split(' ').slice(0,2).join(' ')),
+      datasets:[{data:brVals.map(v=>+v.toFixed(1)),backgroundColor:brColors,borderRadius:3}]},
+    options:{...CB,indexAxis:'y',
+      plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{title:ctx=>brS[ctx[0].dataIndex]?.s||'',label:ctx=>`Breach: ${ctx.parsed.x}% (${fmt(brS[ctx[0].dataIndex]?.br)} orders)`}}},
+      scales:{x:{...CB.scales.x,ticks:{...CB.scales.x.ticks,callback:v=>v+'%'},max:100},y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,font:{size:10}}}}}
+  });
+
+  const allBS=aByS(allR).filter(r=>r.cmp>0).sort((a,b)=>b.cmp-a.cmp);
+  kd('cmpB');
+  CH.cmpB=new Chart($('cmpB').getContext('2d'),{type:'bar',
+    data:{labels:allBS.map(r=>r.s.split(' - ')[0].split(' ').slice(0,2).join(' ')),
+      datasets:[{data:allBS.map(r=>r.cmp),backgroundColor:PAL.slice(0,allBS.length),borderRadius:3}]},
+    options:{...CB,indexAxis:'y',
+      plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{title:ctx=>allBS[ctx[0].dataIndex]?.s||'',label:ctx=>`Complaints: ${fmt(ctx.parsed.x)}`}}},
+      scales:{x:{...CB.scales.x},y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,font:{size:10}}}}}
+  });
+
+  const tblS=aByS(allR).sort((a,b)=>b.del-a.del);
+  let h='';
+  tblS.forEach((r,i)=>{
+    const dP=r.del?+(r.dly/r.del*100).toFixed(1):0;
+    const bP=r.del?+(r.br/r.del*100).toFixed(1):0;
+    const cP=r.del?+(r.cmp/r.del*100).toFixed(2):0;
+    h+=`<tr style="${i%2?'background:#ffffff03':''}">
+      <td>${r.s}</td><td class="r">${fmt(r.del)}</td>
+      <td class="r" style="color:var(--warn)">${fmt(r.dly)}</td>
+      <td class="r" style="color:${col(dP,30,50)}">${dP}%</td>
+      <td class="r" style="color:${r.avg_ata>0?col(r.avg_ata,15,20):'var(--muted)'}">${r.avg_ata>0?r.avg_ata.toFixed(1):'N/A'}</td>
+      <td class="r" style="color:${col(bP,30,50)}">${bP}%</td>
+      <td class="r" style="color:var(--warn)">${fmt(r.cmp)}</td>
+      <td class="r" style="color:${col(cP,1.5,3)}">${cP}%</td>
+    </tr>`;
+  });
+  $('qtb').innerHTML=h;
+}
+
+// ══════════════════════════════════════════
+// TAB 3: VENDORS
+// ══════════════════════════════════════════
+function rT3(){rVend();rVTrend();}
+
+function rVend(){
+  const mo=$('vm').value;
+  const st=$('vs').value;
+  const vn=$('vv').value;
+  const vday=($('v-day')||{value:'ALL'}).value;
+  // VD is monthly-aggregated; day filter shows note if specific day selected
+  const rows=VD.filter(r=>(mo==='ALL'||r.mo===mo)&&(st==='ALL'||r.s===st)&&(vn==='ALL'||r.v===vn));
+  if(!rows.length){
+    ['vcnt','vord','vbr','vdt'].forEach(id=>{const el=$(id);if(el)el.textContent='—';});
+    return;
+  }
+
+  // Aggregate VD by vendor — ord field is volume proxy (not unique orders)
+  const bV={};
+  rows.forEach(r=>{
+    if(!bV[r.v])bV[r.v]={v:r.v,vol:0,br:0,riders:0,dw:0,n:0};
+    const x=bV[r.v];
+    x.vol+=r.ord; x.br+=r.br; x.riders+=r.riders; x.dw+=r.avg_dt*r.ord; x.n+=r.ord;
+  });
+  const totalVol=Object.values(bV).reduce((s,v)=>s+v.vol,0);
+
+  // Real delivered orders from BQ for same filters
+  const bqMo=mo==='ALL'?null:mo;
+  const bqSt=st==='ALL'?null:st;
+  const bqRows=bqF(bqMo,bqSt);
+  // Only use May+Jun period that VD covers (May 27+ for quality, but orders from May 1)
+  const bqMoFilter=mo==='ALL'?['2026-05','2026-06']:[mo];
+  const bqFiltered=bqRows.filter(r=>bqMoFilter.some(m=>r.d.startsWith(m)));
+  const bqTotal=bqFiltered.reduce((s,r)=>s+r.del,0);
+
+  // Apply vendor share % to real BQ total
+  const vList=Object.values(bV).map(v=>({
+    ...v,
+    share:totalVol?v.vol/totalVol:0,
+    realOrd:Math.round(totalVol?v.vol/totalVol*bqTotal:0),
+    avg_dt:v.n?+(v.dw/v.n).toFixed(0):0,
+    br_pct:v.vol?+(v.br/v.vol*100).toFixed(1):0
+  })).sort((a,b)=>b.vol-a.vol);
+
+  const totRealOrd=vList.reduce((s,r)=>s+r.realOrd,0);
+  const totBr=vList.reduce((s,r)=>s+r.br,0);
+  const totVol=vList.reduce((s,r)=>s+r.vol,0);
+  const wDT=totVol?vList.reduce((s,v)=>s+v.avg_dt*v.vol,0)/totVol:0;
+
+  $('vcnt').textContent=vList.length;
+  const vcnts=$('vcnts');if(vcnts)vcnts.textContent=mo==='ALL'?'May–Jun (VD period)':mlbl(mo);
+  $('vord').textContent=fmt(bqTotal);
+  const vords=$('vords');if(vords)vords.textContent=(st==='ALL'?'All Stores':st)+' · from BQ (delivered)';
+  $('vbr').textContent=pct(totVol?totBr/totVol*100:0);
+  $('vdt').textContent=wDT.toFixed(0);
+  const VC=['#00B4A6','#F5A623','#7C3AED','#22D3A0','#F97316','#3B82F6','#EC4899','#A3E635','#FB923C','#818CF8','#34D399','#F43F5E'];
+
+  kd('vsD');
+  CH.vsD=new Chart($('vsD').getContext('2d'),{type:'doughnut',
+    data:{labels:vList.map(v=>v.v),datasets:[{data:vList.map(v=>v.realOrd),backgroundColor:VC.slice(0,vList.length),borderWidth:2,borderColor:'#112240',hoverOffset:5}]},
+    options:{cutout:'62%',responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#0D2137',borderColor:'#1E3A5F',borderWidth:1,bodyColor:'#E8F4FD',
+          callbacks:{
+            title:ctx=>vList[ctx[0].dataIndex]?.v||'',
+            label:ctx=>{
+              const v=vList[ctx.dataIndex];
+              return [' Orders: '+fmt(v.ord)+' ('+pct(v.ord/totO*100)+')',' Breach: '+v.br_pct+'%',' Avg Del: '+v.avg_dt+' min'];
+            }
+          }
+        }
+      }
+    }
+  });
+  const vdtot=$('vdtot');if(vdtot)vdtot.textContent=fmt(bqTotal);
+  let lg='';
+  vList.forEach((v,i)=>{
+    lg+=`<div style="display:flex;align-items:center;gap:3px;font-size:10px">
+      <div style="width:8px;height:8px;border-radius:2px;background:${VC[i%VC.length]};flex-shrink:0"></div>
+      <span style="color:#7B9EC0">${v.v}: <b style="color:#E8F4FD">${fmt(v.realOrd)}</b> <span style="color:var(--teal)">(${pct(v.share*100)})</span></span>
+    </div>`;
+  });
+  const vsleg=$('vsleg');if(vsleg)vsleg.innerHTML=lg;
+
+  let th='';
+  vList.forEach((v,i)=>{
+    th+=`<tr style="${i%2?'background:#ffffff03':''}">
+      <td style="font-weight:600;color:${VC[i%VC.length]}">${v.v}</td>
+      <td class="r">${fmt(v.realOrd)}</td>
+      <td class="r" style="color:var(--gold)">${pct(v.share*100)}</td>
+      <td class="r" style="color:${col(v.br_pct,30,50)}">${v.br_pct}%</td>
+      <td class="r" style="color:${col(v.avg_dt,100,200)}">${v.avg_dt}</td>
+      <td class="r">${v.riders}</td>
+    </tr>`;
+  });
+  const vstb=$('vstb');if(vstb)vstb.innerHTML=th;
+
+  const moL=mo==='ALL'?'All Months':mlbl(mo);
+  const vbh=$('vbh');if(vbh)vbh.textContent='Orders by Vendor — '+moL;
+  kd('voB');
+  CH.voB=new Chart($('voB').getContext('2d'),{type:'bar',
+    data:{labels:vList.map(v=>v.v),datasets:[{data:vList.map(v=>v.realOrd),backgroundColor:VC.slice(0,vList.length),borderRadius:4}]},
+    options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:ctx=>`${fmt(ctx.parsed.y)} (${pct((vList[ctx.dataIndex]?.share||0)*100)})`}}}}
+  });
+
+  // Breach: red gradient — highest breach = dark red, lowest = pale red
+  const brSV=[...vList].sort((a,b)=>a.br_pct-b.br_pct);
+  const brVMax=Math.max(...brSV.map(v=>v.br_pct),1);
+  const brVMin=Math.min(...brSV.map(v=>v.br_pct),0);
+  const brVColors=brSV.map(v=>{
+    const t=brVMax===brVMin?1:(v.br_pct-brVMin)/(brVMax-brVMin);
+    return `rgba(${Math.round(255-(255-150)*t)},${Math.round(180*(1-t))},${Math.round(180*(1-t))},0.92)`;
+  });
+  kd('vbrB');
+  CH.vbrB=new Chart($('vbrB').getContext('2d'),{type:'bar',
+    data:{labels:brSV.map(v=>v.v),datasets:[{data:brSV.map(v=>v.br_pct),backgroundColor:brVColors,borderRadius:3}]},
+    options:{...CB,indexAxis:'y',
+      plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:ctx=>`Breach: ${ctx.parsed.x}% (${fmt(brSV[ctx[0]?.dataIndex]?.br)} orders)`}}},
+      scales:{x:{...CB.scales.x,ticks:{...CB.scales.x.ticks,callback:v=>v+'%'}},y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,font:{size:10}}}}}
+  });
+
+  // Del Time: orange gradient — longest = dark orange, shortest = pale yellow
+  const dtSV=[...vList].sort((a,b)=>a.avg_dt-b.avg_dt);
+  const dtVMax=Math.max(...dtSV.map(v=>v.avg_dt),1);
+  const dtVMin=Math.min(...dtSV.map(v=>v.avg_dt),0);
+  const dtVColors=dtSV.map(v=>{
+    const t=dtVMax===dtVMin?1:(v.avg_dt-dtVMin)/(dtVMax-dtVMin);
+    return `rgba(${Math.round(255)},${Math.round(200-(200-80)*t)},${Math.round(100*(1-t))},0.9)`;
+  });
+  kd('vdtB');
+  CH.vdtB=new Chart($('vdtB').getContext('2d'),{type:'bar',
+    data:{labels:dtSV.map(v=>v.v),datasets:[{data:dtSV.map(v=>v.avg_dt),backgroundColor:dtVColors,borderRadius:3}]},
+    options:{...CB,indexAxis:'y',
+      plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:ctx=>`${ctx.parsed.x} min`}}},
+      scales:{x:{...CB.scales.x,ticks:{...CB.scales.x.ticks,callback:v=>v+' min'}},y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,font:{size:10}}}}}
+  });
+
+  const stTot={};rows.forEach(r=>{stTot[r.s]=(stTot[r.s]||0)+r.ord;});  // vol-based for share %
+  let xh='';
+  [...rows].sort((a,b)=>b.ord-a.ord).forEach((r,i)=>{
+    const ss=stTot[r.s]?+(r.ord/stTot[r.s]*100).toFixed(1):0;
+    xh+=`<tr style="${i%2?'background:#ffffff03':''}">
+      <td style="font-weight:600;color:var(--teal)">${r.v}</td>
+      <td style="color:#7B9EC0">${r.s}</td>
+      <td class="r">${fmt(r.ord)}</td>
+      <td class="r" style="color:var(--gold)">${ss}%</td>
+      <td class="r" style="color:${col(r.br_pct,30,50)}">${r.br_pct}%</td>
+      <td class="r" style="color:${col(r.avg_dt,100,200)}">${r.avg_dt}</td>
+      <td class="r">${r.riders}</td>
+    </tr>`;
+  });
+  const vsth=$('vsth');if(vsth)vsth.textContent='Vendor × Store — '+moL;
+  const vsxtb=$('vsxtb');if(vsxtb)vsxtb.innerHTML=xh||'<tr><td colspan="7" style="color:#7B9EC0;padding:10px;text-align:center">No data</td></tr>';
+}
+
+function rVTrend(){
+  const vn=$('vtv').value;
+  const mos=[...new Set(VD.map(r=>r.mo))].sort();
+  const allV=vn==='ALL'?[...new Set(VD.map(r=>r.v))].sort():[vn];
+  const ds=allV.map((v,i)=>({
+    label:v,
+    data:mos.map(m=>VD.filter(r=>r.mo===m&&r.v===v).reduce((s,r)=>s+r.ord,0)),
+    borderColor:PAL[i%PAL.length],borderWidth:2,tension:0.3,
+    pointRadius:4,pointBackgroundColor:PAL[i%PAL.length],fill:false
+  })).filter(d=>d.data.some(v=>v>0));
+  kd('vtC');
+  CH.vtC=new Chart($('vtC').getContext('2d'),{type:'line',
+    data:{labels:mos.map(m=>new Date(m+'-01').toLocaleString('en',{month:'short',year:'2-digit'})),datasets:ds},
+    options:{...CB,
+      plugins:{...CB.plugins,
+        legend:{display:vn==='ALL',labels:{color:'#7B9EC0',font:{size:10},boxWidth:10}},
+        tooltip:{...CB.plugins.tooltip,callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`}}
+      }
+    }
+  });
+}
+
+
+// ══ CPO SHEET UPLOAD ══
+let _stagedCPO = null;
+
+function handleCPOUpload(inp) {
+  const f = inp.files?.[0];
+  if (!f) return;
+  _stagedCPO = f;
+  const txt = document.getElementById('upload-txt');
+  if (txt) txt.textContent = '✓ ' + f.name;
+  const btn = document.getElementById('upload-btn');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+function applyCPOUpload() {
+  if (!_stagedCPO) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const lines = e.target.result.split('\n').map(l => l.split(','));
+      parseCPOLines(lines);
+    } catch(err) {
+      showToast('⚠ Parse error: ' + err.message, 'var(--danger)');
+    }
+  };
+  reader.readAsText(_stagedCPO);
+}
+
+function parseCPOLines(lines) {
+  // Find header row (contains "Date" cell)
+  let hdrIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].some(c => String(c||'').trim().toLowerCase() === 'date')) {
+      hdrIdx = i; break;
+    }
+  }
+  if (hdrIdx < 0) { showToast('⚠ No header row found', 'var(--danger)'); return; }
+
+  const hdr = lines[hdrIdx].map(c => String(c||'').trim().toLowerCase());
+  const ci = (...ns) => { for (const n of ns) { const i = hdr.findIndex(h => h.includes(n.toLowerCase())); if (i >= 0) return i; } return -1; };
+  const C = {
+    date: ci('date'), rider: ci('rider cut','rider_cut'),
+    vendor: ci('vendor_cut','vendor cut'), orders: ci('total orders','total_orders'),
+    cost: ci('total cost','total_cost'), cpo: hdr.findIndex(h => h === 'cpo'),
+    cpoExcl: ci('cpo(excl','excl vendor')
+  };
+  if (C.cpo < 0) C.cpo = hdr.findIndex(h => h.startsWith('cpo') && !h.includes('excl'));
+
+  // Parse MTD row (first row before header with totalOrders > 0)
+  let newMtd = null;
+  for (let i = 0; i < hdrIdx; i++) {
+    const r = lines[i];
+    const tO = parseFloat(String(r[C.orders]||'').replace(/,/g,''))||0;
+    const tC = parseFloat(String(r[C.cost]||'').replace(/,/g,''))||0;
+    if (tO > 0 && tC > 0) {
+      newMtd = {
+        riderCut:  parseFloat(String(r[C.rider]||'').replace(/,/g,''))||0,
+        vendorCut: parseFloat(String(r[C.vendor]||'').replace(/,/g,''))||0,
+        totalOrders: tO, totalCost: tC,
+        cpo:     parseFloat(String(r[C.cpo]||'').replace(/,/g,''))||0,
+        cpoExcl: parseFloat(String(r[C.cpoExcl]||'').replace(/,/g,''))||0
+      };
+      break;
+    }
+  }
+
+  // Parse daily rows
+  const newCpod = [];
+  const storeCols = {}; // col index → store name (columns after cpoExcl)
+  // Detect store columns from header (anything after col 9)
+  for (let ci2 = 10; ci2 < hdr.length; ci2++) {
+    const sn = lines[hdrIdx][ci2]?.trim();
+    if (sn && sn !== '') storeCols[ci2] = sn;
+  }
+  const newStoreCpo = {};
+
+  for (let i = hdrIdx + 1; i < lines.length; i++) {
+    const r = lines[i];
+    // date may be in col 0 (May format) or col 1 (Jun format with Dow)
+    let dateStr = String(r[C.date]||'').trim();
+    if (!dateStr || dateStr === '-') continue;
+    const m = dateStr.match(/(\d+)\/(\d+)\/(\d+)/);
+    if (!m) continue;
+    const iso = `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+    const tO = parseInt(String(r[C.orders]||'').replace(/,/g,''))||0;
+    if (!tO) continue;
+    const cpoV = parseFloat(String(r[C.cpo]||'').replace(/,/g,''))||null;
+    const exclV = parseFloat(String(r[C.cpoExcl]||'').replace(/,/g,''))||null;
+    if (!cpoV) continue;
+
+    newCpod.push({
+      date: iso, ym: iso.slice(0,7),
+      riderCut: parseFloat(String(r[C.rider]||'').replace(/,/g,''))||0,
+      totalOrders: tO,
+      totalCost: parseFloat(String(r[C.cost]||'').replace(/,/g,''))||0,
+      cpo: cpoV, cpoExcl: exclV
+    });
+
+    // Per-store CPO columns
+    for (const [ci2, sn] of Object.entries(storeCols)) {
+      const v = parseFloat(String(r[ci2]||'').replace(/,/g,''));
+      if (!isNaN(v) && v > 0) {
+        if (!newStoreCpo[sn]) newStoreCpo[sn] = [];
+        newStoreCpo[sn].push(v);
+      }
+    }
+  }
+
+  if (!newCpod.length) { showToast('⚠ No daily rows parsed', 'var(--danger)'); return; }
+
+  // Overwrite global data
+  newCpod.forEach(r => {
+    const idx = CPOD.findIndex(x => x.date === r.date);
+    if (idx >= 0) CPOD[idx] = r; else CPOD.push(r);
+  });
+  CPOD.sort((a,b) => a.date.localeCompare(b.date));
+
+  if (newMtd) {
+    const ym = newCpod[0].ym;
+    if (ym === '2026-06') Object.assign(JUN_MTD, newMtd);
+    else if (ym === '2026-05') Object.assign(MAY_MTD, newMtd);
+  }
+
+  // Update per-store averages
+  for (const [sn, vals] of Object.entries(newStoreCpo)) {
+    STORE_CPO[sn] = +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+  }
+
+  const mn = newCpod[0].date.slice(0,7), mx = newCpod[newCpod.length-1].date.slice(0,7);
+  const badge = document.getElementById('cpo-badge');
+  if (badge) badge.textContent = `CPO: Sheet loaded (${mn}→${mx}, ${newCpod.length} days)`;
+
+  // Reset upload UI
+  _stagedCPO = null;
+  const txt = document.getElementById('upload-txt'); if(txt) txt.textContent = 'Upload CPO Sheet';
+  const btn = document.getElementById('upload-btn'); if(btn){btn.disabled=true;btn.style.opacity='.4';}
+  const fi = document.getElementById('cpo-file'); if(fi) fi.value='';
+
+  showToast(`✓ Loaded ${newCpod.length} days · ${Object.keys(newStoreCpo).length} stores`);
+  // Refresh leadership tab
+  rT0();
+}
+
+function showToast(msg, color='var(--teal)') {
+  const t = document.getElementById('upload-toast');
+  if (!t) return;
+  t.textContent = msg; t.style.color = color; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3500);
+}
+
+
+// ══ TAB 4: UTILIZATION ══
+function rT4(){rUtil();rUtilTrend();}
+
+function rUtil(){
+  const mo=$('u-mo').value;
+  const st=$('u-st').value;
+  const uday=($('u-day')||{value:'ALL'}).value;
+  // For utilization daily view, filter UTIL_DAY when a specific day is selected
+  const rows=uday!=='ALL'
+    ?[]
+    :UTIL_MO.filter(r=>(mo==='ALL'||r.mo===mo)&&(st==='ALL'||r.s===st));
+  if(!rows.length)return;
+  const byS={};
+  rows.forEach(r=>{
+    if(!byS[r.s])byS[r.s]={s:r.s,days:0,riders:0,vol:0,dw:0,distw:0,brw:0,n:0};
+    const x=byS[r.s];
+    x.days=Math.max(x.days,r.days);x.riders=Math.max(x.riders,r.riders);
+    x.vol+=r.vol;x.dw+=r.del_min*r.vol;x.distw+=r.dist_km*r.vol;x.brw+=r.breach_pct*r.vol;x.n+=r.vol;
+  });
+  const sList=Object.values(byS).map(r=>({...r,
+    opr:r.riders&&r.days?+(r.vol/r.riders/r.days).toFixed(1):0,
+    avg_del:r.n?+(r.dw/r.n).toFixed(1):0,
+    avg_dist:r.n?+(r.distw/r.n).toFixed(2):0,
+    avg_br:r.n?+(r.brw/r.n).toFixed(1):0
+  })).sort((a,b)=>b.opr-a.opr);
+  const moL=mo==='ALL'?'All Months':mlbl(mo);
+  const totR=sList.reduce((s,r)=>s+r.riders,0);
+  const avgOpr=sList.length?+(sList.reduce((s,r)=>s+r.opr,0)/sList.length).toFixed(1):0;
+  const best=sList[0]||{};
+  const worst=sList[sList.length-1]||{};
+  $('u-kpis').innerHTML=
+    '<div class="card kpi"><div class="lbl">Total Active Riders</div>'+
+    '<div class="val" style="color:var(--teal)">'+fmt(Math.round(totR))+'</div>'+
+    '<div class="sub">'+moL+'</div></div>'+
+    '<div class="card kpi"><div class="lbl">Avg Orders/Rider/Day</div>'+
+    '<div class="val" style="color:var(--gold)">'+avgOpr+'</div>'+
+    '<div class="sub">Across all stores</div></div>'+
+    '<div class="card kpi"><div class="lbl">Most Utilized Store</div>'+
+    '<div class="val" style="font-size:16px;color:var(--ok)">'+(best.s||'—').split(' ')[0]+'</div>'+
+    '<div class="sub">'+best.opr+' orders/rider/day</div></div>'+
+    '<div class="card kpi"><div class="lbl">Least Utilized Store</div>'+
+    '<div class="val" style="font-size:16px;color:var(--warn)">'+(worst.s||'—').split(' ')[0]+'</div>'+
+    '<div class="sub">'+worst.opr+' orders/rider/day</div></div>';
+  const oprMax=Math.max(...sList.map(r=>r.opr),1);
+  const oprMin=Math.min(...sList.map(r=>r.opr),0);
+  const oprColors=sList.map(r=>{
+    const t=oprMax===oprMin?1:(r.opr-oprMin)/(oprMax-oprMin);
+    return `rgba(${Math.round(0+0*t)},${Math.round(100+80*t)},${Math.round(150+56*t)},0.9)`;
+  });
+  const vbH=$('u-bar-h');if(vbH)vbH.textContent='Orders / Rider — '+moL;
+  kd('uOprBar');
+  CH.uOprBar=new Chart($('uOprBar').getContext('2d'),{type:'bar',
+    data:{labels:sList.map(r=>r.s.split(' - ')[0].split(' ').slice(0,2).join(' ')),
+      datasets:[{data:sList.map(r=>r.opr),backgroundColor:oprColors,borderRadius:4}]},
+    options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,
+      callbacks:{title:ctx=>sList[ctx[0].dataIndex]?.s||'',
+        label:ctx=>ctx.parsed.y+' orders/rider/day'}}}}});
+  const delS=[...sList].sort((a,b)=>a.avg_del-b.avg_del);
+  const delMax=Math.max(...delS.map(r=>r.avg_del),1);
+  const delMin=Math.min(...delS.map(r=>r.avg_del),0);
+  const delColors=delS.map(r=>{
+    const t=delMax===delMin?1:(r.avg_del-delMin)/(delMax-delMin);
+    return `rgba(255,${Math.round(200-120*t)},${Math.round(80*(1-t))},0.9)`;
+  });
+  kd('uDelBar');
+  CH.uDelBar=new Chart($('uDelBar').getContext('2d'),{type:'bar',
+    data:{labels:delS.map(r=>r.s.split(' - ')[0].split(' ').slice(0,2).join(' ')),
+      datasets:[{data:delS.map(r=>r.avg_del),backgroundColor:delColors,borderRadius:3}]},
+    options:{...CB,indexAxis:'y',plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,
+      callbacks:{title:ctx=>delS[ctx[0].dataIndex]?.s||'',label:ctx=>ctx.parsed.x+' min avg'}}},
+      scales:{x:{...CB.scales.x,ticks:{...CB.scales.x.ticks,callback:v=>v+' min'}},
+              y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,font:{size:10}}}}}});
+  const distS=[...sList].sort((a,b)=>a.avg_dist-b.avg_dist);
+  const distMax=Math.max(...distS.map(r=>r.avg_dist),1);
+  const distMin=Math.min(...distS.map(r=>r.avg_dist),0);
+  const distColors=distS.map(r=>{
+    const t=distMax===distMin?1:(r.avg_dist-distMin)/(distMax-distMin);
+    return `rgba(${Math.round(40+60*t)},${Math.round(100+50*(1-t))},${Math.round(200+30*t)},0.88)`;
+  });
+  kd('uDistBar');
+  CH.uDistBar=new Chart($('uDistBar').getContext('2d'),{type:'bar',
+    data:{labels:distS.map(r=>r.s.split(' - ')[0].split(' ').slice(0,2).join(' ')),
+      datasets:[{data:distS.map(r=>r.avg_dist),backgroundColor:distColors,borderRadius:3}]},
+    options:{...CB,indexAxis:'y',plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,
+      callbacks:{title:ctx=>distS[ctx[0].dataIndex]?.s||'',label:ctx=>ctx.parsed.x+' km avg'}}},
+      scales:{x:{...CB.scales.x,ticks:{...CB.scales.x.ticks,callback:v=>v+' km'}},
+              y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,font:{size:10}}}}}});
+  let h='';
+  sList.forEach((r,i)=>{
+    h+='<tr style="'+(i%2?'background:#ffffff03':'')+'">' +
+      '<td style="font-weight:600">'+r.s+'</td>' +
+      '<td class="r">'+r.days+'</td>' +
+      '<td class="r" style="color:var(--teal)">'+r.riders.toFixed(1)+'</td>' +
+      '<td class="r" style="color:'+col(r.opr,80,150)+';font-weight:600">'+r.opr+'</td>' +
+      '<td class="r" style="color:'+col(r.avg_del,80,150)+'">'+r.avg_del+' min</td>' +
+      '<td class="r" style="color:var(--muted)">'+r.avg_dist+' km</td>' +
+      '<td class="r" style="color:'+col(r.avg_br,30,50)+'">'+r.avg_br+'%</td>' +
+      '</tr>';
+  });
+  const utbl=$('u-tbl');if(utbl)utbl.innerHTML=h;
+}
+
+function rUtilTrend(){
+  const st=$('u-trend-st').value;
+  const days=[...new Set(UTIL_DAY.map(r=>r.d))].sort();
+  let data;
+  if(st==='ALL'){
+    const byD={};
+    UTIL_DAY.forEach(r=>{if(!byD[r.d])byD[r.d]={sum:0,n:0};byD[r.d].sum+=r.opr;byD[r.d].n++;});
+    data=days.map(d=>byD[d]?+(byD[d].sum/byD[d].n).toFixed(1):null);
+  } else {
+    data=days.map(d=>{const r=UTIL_DAY.find(x=>x.d===d&&x.s===st);return r?r.opr:null;});
+  }
+  kd('uTrend');
+  CH.uTrend=new Chart($('uTrend').getContext('2d'),{type:'line',
+    data:{labels:days.map(d=>d.slice(5)),datasets:[{data,
+      borderColor:'#00B4A6',backgroundColor:'#00B4A615',borderWidth:2,
+      tension:0.3,pointRadius:days.length>20?0:3,fill:true,spanGaps:true}]},
+    options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,
+      callbacks:{label:ctx=>'Orders/Rider: '+ctx.parsed.y}}}}});
+}
+
+// ══ INIT ══
+Chart.defaults.font.family = "'Inter',sans-serif";
+initDrops();
+rT0();
+
+</script>
+</body>
+</html>
